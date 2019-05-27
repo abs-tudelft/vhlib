@@ -18,20 +18,26 @@ use ieee.numeric_std.all;
 
 library work;
 use work.Stream_pkg.all;
-use work.StreamSim_pkg.all;
+use work.ClockGen_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
 entity StreamFIFO_tb is
-  port (
-    in_clk                      : in  std_logic;
-    in_reset                    : in  std_logic;
-    out_clk                     : in  std_logic;
-    out_reset                   : in  std_logic
+  generic (
+    IN_CLK_PERIOD               : in  time;
+    OUT_CLK_PERIOD              : in  time
   );
 end StreamFIFO_tb;
 
 architecture TestBench of StreamFIFO_tb is
 
   constant DATA_WIDTH           : natural := 8;
+
+  signal in_clk                 : std_logic;
+  signal in_reset               : std_logic;
+
+  signal out_clk                : std_logic;
+  signal out_reset              : std_logic;
 
   signal valid_a                : std_logic;
   signal ready_a                : std_logic;
@@ -43,18 +49,37 @@ architecture TestBench of StreamFIFO_tb is
 
 begin
 
-  prod_a: StreamModelSource_mod
+  clkgen_in: ClockGen_mod
     generic map (
-      DATA_WIDTH                => DATA_WIDTH,
-      SEED                      => 1,
-      NAME                      => "a"
+      NAME                      => "in",
+      INIT_PERIOD               => IN_CLK_PERIOD
+    )
+    port map (
+      clk                       => in_clk,
+      reset                     => in_reset
+    );
+
+  clkgen_out: ClockGen_mod
+    generic map (
+      NAME                      => "out",
+      INIT_PERIOD               => OUT_CLK_PERIOD
+    )
+    port map (
+      clk                       => out_clk,
+      reset                     => out_reset
+    );
+
+  source_a: StreamSource_mod
+    generic map (
+      NAME                      => "a",
+      ELEMENT_WIDTH             => DATA_WIDTH
     )
     port map (
       clk                       => in_clk,
       reset                     => in_reset,
-      out_valid                 => valid_a,
-      out_ready                 => ready_a,
-      out_data                  => data_a
+      valid                     => valid_a,
+      ready                     => ready_a,
+      data                      => data_a
     );
 
   uut: StreamFIFO
@@ -76,18 +101,17 @@ begin
       out_data                  => data_b
     );
 
-  cons_b: StreamModelSink_mod
+  sink_b: StreamSink_mod
     generic map (
-      DATA_WIDTH                => DATA_WIDTH,
-      SEED                      => 2,
-      NAME                      => "b"
+      NAME                      => "b",
+      ELEMENT_WIDTH             => DATA_WIDTH
     )
     port map (
       clk                       => out_clk,
       reset                     => out_reset,
-      in_valid                  => valid_b,
-      in_ready                  => ready_b,
-      in_data                   => data_b
+      valid                     => valid_b,
+      ready                     => ready_b,
+      data                      => data_b
     );
 
 end TestBench;

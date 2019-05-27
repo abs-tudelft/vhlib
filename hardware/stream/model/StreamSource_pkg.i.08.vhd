@@ -188,6 +188,7 @@ package StreamSource_pkg is
     impure function cq_get_d_sgn  return signed;
     impure function cq_get_d_int  return integer;
     impure function cq_get_d_nat  return natural;
+    impure function cq_get_d_str  return string;
     impure function cq_get_count  return std_logic_vector;
     impure function cq_get_ecount return integer;
     impure function cq_get_last   return std_logic;
@@ -770,6 +771,11 @@ package body StreamSource_pkg is
     impure function cq_get_d_nat return natural is
     begin
       return mon.cq_get_d_nat;
+    end function;
+
+    impure function cq_get_d_str return string is
+    begin
+      return mon.cq_get_d_str;
     end function;
 
     impure function cq_get_count return std_logic_vector is

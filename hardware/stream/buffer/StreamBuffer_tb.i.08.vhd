@@ -18,21 +18,22 @@ use ieee.numeric_std.all;
 
 library work;
 use work.Stream_pkg.all;
-use work.StreamSim_pkg.all;
+use work.ClockGen_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
 entity StreamBuffer_tb is
   generic (
     MIN_DEPTH                   : natural
-  );
-  port (
-    clk                         : in  std_logic;
-    reset                       : in  std_logic
   );
 end StreamBuffer_tb;
 
 architecture TestBench of StreamBuffer_tb is
 
   constant DATA_WIDTH           : natural := 8;
+
+  signal clk                    : std_logic;
+  signal reset                  : std_logic;
 
   signal valid_a                : std_logic;
   signal ready_a                : std_logic;
@@ -44,18 +45,23 @@ architecture TestBench of StreamBuffer_tb is
 
 begin
 
-  prod_a: StreamModelSource_mod
+  clkgen: ClockGen_mod
+    port map (
+      clk                       => clk,
+      reset                     => reset
+    );
+
+  source_a: StreamSource_mod
     generic map (
-      DATA_WIDTH                => DATA_WIDTH,
-      SEED                      => 1,
-      NAME                      => "a"
+      NAME                      => "a",
+      ELEMENT_WIDTH             => DATA_WIDTH
     )
     port map (
       clk                       => clk,
       reset                     => reset,
-      out_valid                 => valid_a,
-      out_ready                 => ready_a,
-      out_data                  => data_a
+      valid                     => valid_a,
+      ready                     => ready_a,
+      data                      => data_a
     );
 
   uut: StreamBuffer
@@ -74,18 +80,17 @@ begin
       out_data                  => data_b
     );
 
-  cons_b: StreamModelSink_mod
+  sink_b: StreamSink_mod
     generic map (
-      DATA_WIDTH                => DATA_WIDTH,
-      SEED                      => 2,
-      NAME                      => "b"
+      NAME                      => "b",
+      ELEMENT_WIDTH             => DATA_WIDTH
     )
     port map (
       clk                       => clk,
       reset                     => reset,
-      in_valid                  => valid_b,
-      in_ready                  => ready_b,
-      in_data                   => data_b
+      valid                     => valid_b,
+      ready                     => ready_b,
+      data                      => data_b
     );
 
 end TestBench;

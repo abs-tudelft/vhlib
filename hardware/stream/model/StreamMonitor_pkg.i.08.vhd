@@ -117,6 +117,7 @@ package StreamMonitor_pkg is
     impure function cq_get_d_sgn  return signed;
     impure function cq_get_d_int  return integer;
     impure function cq_get_d_nat  return natural;
+    impure function cq_get_d_str  return string;
     impure function cq_get_count  return std_logic_vector;
     impure function cq_get_ecount return integer;
     impure function cq_get_last   return std_logic;
@@ -369,6 +370,24 @@ package body StreamMonitor_pkg is
     impure function cq_get_d_nat return natural is
     begin
       return to_integer(cq_get_d_uns);
+    end function;
+
+    impure function cq_get_d_str return string is
+      variable s  : string(1 to 1) := "?";
+    begin
+      if cq_ready then
+        s(s'low) := character'val(cq_get_d_nat mod 256);
+        cq_next;
+        -- This check is not necessary, but avoids concatenating null strings
+        -- (null vector implementations are sketchy among tool vendors).
+        if cq_ready then
+          return s & cq_get_d_str;
+        else
+          return s;
+        end if;
+      else
+        return "";
+      end if;
     end function;
 
     impure function cq_get_count return std_logic_vector is

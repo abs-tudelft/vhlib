@@ -16,32 +16,18 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
-use work.StreamSim_pkg.all;
-
 entity StreamBuffer_4_tc is
 end StreamBuffer_4_tc;
 
 architecture TestCase of StreamBuffer_4_tc is
-
-  signal clk                    : std_logic;
-  signal reset                  : std_logic;
-
 begin
 
-  tv: entity work.StreamBuffer_tv
-    port map (
-      clk                       => clk,
-      reset                     => reset
-    );
+  tv: entity work.StreamBuffer_tv;
 
   tb: entity work.StreamBuffer_tb
     generic map (
       MIN_DEPTH                 => 4
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset
     );
+
 end TestCase;
 

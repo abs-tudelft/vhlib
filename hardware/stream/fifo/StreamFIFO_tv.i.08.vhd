@@ -17,58 +17,118 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.StreamSim_pkg.all;
+use work.TestCase_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
 entity StreamFIFO_tv is
   generic (
     IN_CLK_PERIOD               : in  time;
     OUT_CLK_PERIOD              : in  time
   );
-  port (
-    in_clk                      : inout std_logic;
-    in_reset                    : inout std_logic;
-    out_clk                     : inout std_logic;
-    out_reset                   : inout std_logic
-  );
 end StreamFIFO_tv;
 
 architecture TestVector of StreamFIFO_tv is
 begin
 
-  in_clk_proc: process is
+  speed_tc: process is
+    constant TEST_STR : string := "The quick brown fox jumps over the lazy dog.";
+    variable a : streamsource_type;
+    variable b : streamsink_type;
   begin
-    stream_tb_gen_clock(in_clk, IN_CLK_PERIOD);
-    wait;
-  end process;
+    tc_open("StreamFIFO-speed", "tests that StreamFIFO reaches 1 transfer/cycle.");
+    a.initialize("a");
+    b.initialize("b");
 
-  out_clk_proc: process is
-  begin
-    stream_tb_gen_clock(out_clk, OUT_CLK_PERIOD);
-    wait;
-  end process;
+    a.push_str(TEST_STR);
+    a.transmit;
+    b.unblock;
 
-  stimulus: process is
-  begin
-    in_reset <= '1';
-    out_reset <= '1';
-    wait for 50 ns;
-    wait until rising_edge(out_clk);
-    out_reset <= '0';
-    wait until rising_edge(in_clk);
-    in_reset <= '0';
-    wait for 10 us;
-    for i in 1 to 3 loop
-      stream_tb_push_ascii("a", "The quick brown fox jumps over the lazy dog.");
-      stream_tb_expect_ascii("b", "The quick brown fox jumps over the lazy dog.", 2 us);
-      wait for 2 us;
-      stream_tb_push_ascii("a", "Crazy Fredrick bought many very exquisite opal jewels.", 0);
-      stream_tb_expect_ascii("b", "Crazy Fredrick bought many very exquisite opal jewels.", 2 us);
-      wait for 2 us;
-      stream_tb_push_ascii("a", "Quick zephyrs blow, vexing daft Jim.", 20);
-      stream_tb_expect_ascii("b", "Quick zephyrs blow, vexing daft Jim.", 2 us);
-      wait for 2 us;
+    tc_wait_for(2 us);
+
+    for i in TEST_STR'range loop
+      tc_check(a.cq_ready, "missing data on input stream");
+      tc_check(b.cq_ready, "missing data on output stream");
+      tc_check(b.cq_get_d_nat mod 256, character'pos(TEST_STR(i)), "incorrect data on output stream");
+      if i > TEST_STR'low then
+        if OUT_CLK_PERIOD <= IN_CLK_PERIOD then
+          tc_check(a.cq_cyc_total, 1, "input stream < 1 xfer/cycle");
+        end if;
+        if OUT_CLK_PERIOD >= IN_CLK_PERIOD then
+          tc_check(b.cq_cyc_total, 1, "output stream < 1 xfer/cycle");
+        end if;
+      end if;
+      a.cq_next;
+      b.cq_next;
     end loop;
-    stream_tb_complete;
+    tc_check(not a.cq_ready, "unexpected data on input stream");
+    tc_check(not b.cq_ready, "unexpected data on output stream");
+
+    tc_pass;
+    wait;
+  end process;
+
+  backpressure_tc: process is
+    constant TEST_STR : string := "The quick brown fox jumps over the lazy dog.";
+    variable a : streamsource_type;
+    variable b : streamsink_type;
+  begin
+    tc_open("StreamFIFO-backpressure", "tests that StreamFIFO's backpressure handling is correct.");
+    a.initialize("a");
+    b.initialize("b");
+
+    a.push_str(TEST_STR);
+    a.transmit;
+    b.unblock;
+    tc_wait_for(100 ns);
+    b.reblock;
+    tc_wait_for(100 ns);
+    b.unblock;
+    tc_wait_for(2 us);
+
+    for i in TEST_STR'range loop
+      tc_check(a.cq_ready, "missing data on input stream");
+      tc_check(b.cq_ready, "missing data on output stream");
+      tc_check(b.cq_get_d_nat mod 256, character'pos(TEST_STR(i)), "incorrect data on output stream");
+      a.cq_next;
+      b.cq_next;
+    end loop;
+    tc_check(not a.cq_ready, "unexpected data on input stream");
+    tc_check(not b.cq_ready, "unexpected data on output stream");
+
+    tc_pass;
+    wait;
+  end process;
+
+  random_tc: process is
+    constant TEST_STR_X : string := "The quick brown fox jumps over the lazy dog.";
+    constant TEST_STR : string := TEST_STR_X & TEST_STR_X & TEST_STR_X & TEST_STR_X;
+    variable a : streamsource_type;
+    variable b : streamsink_type;
+  begin
+    tc_open("StreamFIFO-random", "tests randomized handshaking with StreamFIFO.");
+    a.initialize("a");
+    b.initialize("b");
+
+    a.set_total_cyc(-5, 5);
+    b.set_total_cyc(-5, 5);
+
+    a.push_str(TEST_STR);
+    a.transmit;
+    b.unblock;
+    tc_wait_for(10 us);
+
+    for i in TEST_STR'range loop
+      tc_check(a.cq_ready, "missing data on input stream");
+      tc_check(b.cq_ready, "missing data on output stream");
+      tc_check(b.cq_get_d_nat mod 256, character'pos(TEST_STR(i)), "incorrect data on output stream");
+      a.cq_next;
+      b.cq_next;
+    end loop;
+    tc_check(not a.cq_ready, "unexpected data on input stream");
+    tc_check(not b.cq_ready, "unexpected data on output stream");
+
+    tc_pass;
     wait;
   end process;
 

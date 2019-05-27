@@ -39,8 +39,16 @@ entity StreamArb is
     -- Width of the stream data vectors.
     DATA_WIDTH                  : natural;
 
-    -- Arbitration method. Must be "ROUND-ROBIN" or "FIXED". If fixed,
-    -- lower-indexed streams take precedence.
+    -- Arbitration method. Must be "ROUND-ROBIN", "RR-STICKY" or "FIXED".
+    -- For round-robin, the arbiter will give precedence to the next stream
+    -- (cyclicly), e.g. for 3 sources that are continuously valid the pattern
+    -- will be 012012012012012012 etc. Sticky round-robin differs in that it
+    -- waits until the current source stalls before switching to the next
+    -- source cyclicly. This is useful when switching source incurs latency
+    -- downstream,  for instance when each source is requesting sequential DDR
+    -- accesses from different source addresses. Depending on the upstream
+    -- buffer sizes the access pattern may then become 000111222000111222 etc.
+    -- For fixed, lower-indexed streams always take precedence.
     ARB_METHOD                  : string := "ROUND-ROBIN"
 
   );
@@ -61,7 +69,7 @@ entity StreamArb is
     in_data                     : in  std_logic_vector(NUM_INPUTS*DATA_WIDTH-1 downto 0);
     in_last                     : in  std_logic_vector(NUM_INPUTS-1 downto 0) := (others => '1');
 
-    -- Output stream. out_index and out_last have the same timing as out_data, so it can be
+    -- Output stream. out_index has the same timing as out_data, so it can be
     -- considered to be part of the stream.
     out_valid                   : out std_logic;
     out_ready                   : in  std_logic;
@@ -98,12 +106,21 @@ begin
   prio_enc: process (in_valid, index_r) is
   begin
 
-    -- Default index is the lowest priority, so we don't have to check that
-    -- valid bit.
-    index_comb <= std_logic_vector(to_unsigned(NUM_INPUTS-1, INDEX_WIDTH));
+    -- For round-robin, we should maintain our state when nothing is valid, so
+    -- that's our default. We don't have to do that for fixed priority, which
+    -- reduces the length of the priority encoder by one input.
+    if ARB_METHOD /= "FIXED" then
+      -- Default index is the current priority, so we maintain our state when
+      -- nothing is valid.
+      index_comb <= index_r;
+    else
+      -- Default index is the lowest priority, so we don't have to check that
+      -- valid bit.
+      index_comb <= std_logic_vector(to_unsigned(NUM_INPUTS-1, INDEX_WIDTH));
+    end if;
 
-    -- Override with lower indices if the associated stream is valid.
-    for i in NUM_INPUTS-2 downto 0 loop
+    -- Assign fixed priorities for each stream.
+    for i in NUM_INPUTS-1 downto 0 loop
       if in_valid(i) = '1' then
         index_comb <= std_logic_vector(to_unsigned(i, INDEX_WIDTH));
       end if;
@@ -111,13 +128,19 @@ begin
 
     -- Add a level of conditional higher-priority inputs based on the
     -- previously selected index for round-robin arbitration.
-    if ARB_METHOD = "ROUND-ROBIN" then
-      for i in NUM_INPUTS-1 downto 1 loop
-        if i > to_integer(unsigned(index_r)) then
-          index_comb <= std_logic_vector(to_unsigned(i, INDEX_WIDTH));
+    for i in NUM_INPUTS-1 downto 0 loop
+      if in_valid(i) = '1' then
+        if ARB_METHOD = "ROUND-ROBIN" then
+          if i > to_integer(unsigned(index_r)) then
+            index_comb <= std_logic_vector(to_unsigned(i, INDEX_WIDTH));
+          end if;
+        elsif ARB_METHOD = "RR-STICKY" then
+          if i >= to_integer(unsigned(index_r)) then
+            index_comb <= std_logic_vector(to_unsigned(i, INDEX_WIDTH));
+          end if;
         end if;
-      end loop;
-    end if;
+      end if;
+    end loop;
 
   end process;
 

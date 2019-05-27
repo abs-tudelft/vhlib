@@ -160,17 +160,17 @@ begin
         burst_remain := burst_remain - 1;
 
         -- See if we've completed the current command.
-        if xfer_count >= num_xfer or num_xfer <= 0 then
-          if el_count >= num_el or num_el <= 0 then
-            if pkt_count >= num_pkt or num_pkt <= 0 then
-              if strsink.is_queue(NAME & ".uq") then
-                if strsink.get_int(NAME & ".uq.sequence") = cur_sequence then
-                  strsink.pop(NAME & ".uq");
-                end if;
-              end if;
-              cur_sequence := -1;
+        if (
+          (num_xfer > 0 and xfer_count >= num_xfer) or
+          (num_el   > 0 and el_count   >= num_el) or
+          (num_pkt  > 0 and pkt_count  >= num_pkt)
+        ) then
+          if strsink.is_queue(NAME & ".uq") then
+            if strsink.get_int(NAME & ".uq.sequence") = cur_sequence then
+              strsink.pop(NAME & ".uq");
             end if;
           end if;
+          cur_sequence := -1;
         end if;
 
       end if;

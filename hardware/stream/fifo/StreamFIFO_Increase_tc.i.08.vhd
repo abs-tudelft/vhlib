@@ -16,39 +16,22 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
-use work.StreamSim_pkg.all;
-
 entity StreamFIFO_Increase_tc is
 end StreamFIFO_Increase_tc;
 
 architecture TestCase of StreamFIFO_Increase_tc is
-
-  signal in_clk                 : std_logic;
-  signal in_reset               : std_logic;
-  signal out_clk                : std_logic;
-  signal out_reset              : std_logic;
-
 begin
 
   tv: entity work.StreamFIFO_tv
     generic map (
       IN_CLK_PERIOD             => 10 ns,
       OUT_CLK_PERIOD            => 2.2 ns
-    )
-    port map (
-      in_clk                    => in_clk,
-      in_reset                  => in_reset,
-      out_clk                   => out_clk,
-      out_reset                 => out_reset
     );
 
   tb: entity work.StreamFIFO_tb
-    port map (
-      in_clk                    => in_clk,
-      in_reset                  => in_reset,
-      out_clk                   => out_clk,
-      out_reset                 => out_reset
+    generic map (
+      IN_CLK_PERIOD             => 10 ns,
+      OUT_CLK_PERIOD            => 2.2 ns
     );
 
 end TestCase;

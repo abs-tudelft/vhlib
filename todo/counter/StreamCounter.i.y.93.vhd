@@ -26,7 +26,7 @@ use work.UtilInt_pkg.all;
 
 -- Symbol: --->(+count)--->
 
-entity StreamCounter is
+entity StreamElementCounter is
   generic (
     -- Width of the count input. Must be at least one to prevent null ranges.
     IN_COUNT_WIDTH              : positive := 1;
@@ -55,7 +55,7 @@ entity StreamCounter is
     in_ready                    : out std_logic;
     in_last                     : in  std_logic;
     in_count                    : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0);
-    in_dvalid                   : in  std_logic;
+    in_dvalid                   : in  std_logic := '1';
 
     -- Output stream.
     out_valid                   : out std_logic;
@@ -64,9 +64,9 @@ entity StreamCounter is
     out_last                    : out std_logic
 
   );
-end StreamCounter;
+end StreamElementCounter;
 
-architecture Behavioral of StreamCounter is
+architecture Behavioral of StreamElementCounter is
 
   constant OUT_COUNT_MAX_CLAMP  : natural := imin(OUT_COUNT_MAX, 2**OUT_COUNT_WIDTH - 1);
   constant COUNT_REG_WIDTH      : natural := log2ceil(IN_COUNT_MAX + OUT_COUNT_MAX_CLAMP + 1);

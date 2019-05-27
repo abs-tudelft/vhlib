@@ -19,8 +19,8 @@ use ieee.numeric_std.all;
 library work;
 use work.Stream_pkg.all;
 
--- This unit instantiates a StreamGearboxParallelizer, StreamSerializer, or neither
--- based on its generic configuration.
+-- This unit instantiates a StreamGearboxParallelizer,
+-- StreamGearboxSerializer, or neither  based on its generic configuration.
 --
 --             .-----.
 -- Symbol: --->| a:b |--->

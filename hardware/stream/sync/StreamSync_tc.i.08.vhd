@@ -17,42 +17,64 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.StreamSim_pkg.all;
+use work.TestCase_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
 entity StreamSync_tc is
 end StreamSync_tc;
 
 architecture TestCase of StreamSync_tc is
-
-  signal clk                    : std_logic;
-  signal reset                  : std_logic;
-
 begin
 
-  clk_proc: process is
+  basic_tc: process is
+    constant A_STR : string := "The Quick Brown Fox jumps over a Lazy Dog.";
+    constant B_STR : string := "A Quick Brown Fox jumps over the Lazy Dog.";
+    constant C_STR : string := "ThE quicK browN fox jumps over a Lazy Dog.";
+    constant D_STR : string := "A quIck brOwn foX jumps over the Lazy Dog.";
+    variable a : streamsource_type;
+    variable b : streamsource_type;
+    variable c : streamsink_type;
+    variable d : streamsink_type;
   begin
-    stream_tb_gen_clock(clk, 10 ns);
+    tc_open("StreamSync-basic", "tests basic sync functionality with random handshakes.");
+    a.initialize("a");
+    b.initialize("b");
+    c.initialize("c");
+    d.initialize("d");
+
+    a.set_total_cyc(-5, 5);
+    a.set_x("1"); -- advance b
+    a.set_y("1"); -- use b
+    a.set_z("1"); -- enable c
+    a.push_str(A_STR);
+    a.transmit;
+
+    b.set_total_cyc(-5, 5);
+    b.set_x("1"); -- advance a
+    b.set_y("1"); -- use a
+    b.set_z("1"); -- enable d
+    b.push_str(B_STR);
+    b.transmit;
+
+    c.set_total_cyc(-5, 5);
+    c.unblock;
+
+    d.set_total_cyc(-5, 5);
+    d.unblock;
+
+    tc_wait_for(5 us);
+
+    tc_check(a.cq_get_d_str, A_STR);
+    tc_check(b.cq_get_d_str, B_STR);
+    tc_check(c.cq_get_d_str, C_STR);
+    tc_check(d.cq_get_d_str, D_STR);
+
+    tc_pass;
     wait;
   end process;
 
-  stimulus: process is
-  begin
-    for i in 1 to 5 loop
-      reset <= '1';
-      wait for 50 ns;
-      wait until rising_edge(clk);
-      reset <= '0';
-      wait for 50 us;
-      wait until rising_edge(clk);
-    end loop;
-    stream_tb_complete;
-  end process;
-
-  tb: entity work.StreamSync_tb
-    port map (
-      clk                       => clk,
-      reset                     => reset
-    );
+  tb: entity work.StreamSync_tb;
 
 end TestCase;
 
