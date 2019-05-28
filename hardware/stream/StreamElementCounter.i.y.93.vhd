@@ -21,7 +21,7 @@ use work.Stream_pkg.all;
 use work.UtilInt_pkg.all;
 
 -- This unit counts the number of elements that have been handshaked. If the
--- last signal is asserted or the maixmum output count has been reached, the
+-- last signal is asserted or the maximum output count has been reached, the
 -- output is validated.
 
 -- Symbol: --->(+count)--->
@@ -53,8 +53,8 @@ entity StreamElementCounter is
     -- Input stream.
     in_valid                    : in  std_logic;
     in_ready                    : out std_logic;
-    in_last                     : in  std_logic;
-    in_count                    : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0);
+    in_last                     : in  std_logic := '0';
+    in_count                    : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(1, IN_COUNT_WIDTH));
     in_dvalid                   : in  std_logic := '1';
 
     -- Output stream.

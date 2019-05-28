@@ -359,24 +359,32 @@ package Stream_pkg is
     );
   end component;
 
-  component StreamAccumulator is
+  component StreamPrefixSum is
     generic (
-      DATA_WIDTH                : positive;
-      CTRL_WIDTH                : natural;
-      IS_SIGNED                 : boolean
+      DATA_WIDTH                  : natural;
+      COUNT_MAX                   : natural;
+      COUNT_WIDTH                 : natural;
+      CTRL_WIDTH                  : natural := 1
     );
     port (
-      clk                       : in  std_logic;
-      reset                     : in  std_logic;
-      in_valid                  : in  std_logic;
-      in_ready                  : out std_logic;
-      in_data                   : in  std_logic_vector(CTRL_WIDTH + DATA_WIDTH-1 downto 0);
-      in_skip                   : in  std_logic;
-      in_clear                  : in  std_logic;
-      out_valid                 : out std_logic;
-      out_ready                 : in  std_logic;
-      out_data                  : out std_logic_vector(CTRL_WIDTH + DATA_WIDTH-1 downto 0)
-
+      clk                         : in  std_logic;
+      reset                       : in  std_logic;
+      in_valid                    : in  std_logic;
+      in_ready                    : out std_logic;
+      in_dvalid                   : in  std_logic;
+      in_data                     : in  std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
+      in_count                    : in  std_logic_vector(COUNT_WIDTH-1 downto 0);
+      in_last                     : in  std_logic;
+      in_ctrl                     : in  std_logic_vector(CTRL_WIDTH-1 downto 0) := (others => '0');
+      in_clear                    : in  std_logic := '0';
+      in_initial                  : in  std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+      out_valid                   : out std_logic;
+      out_ready                   : in  std_logic;
+      out_dvalid                  : out std_logic;
+      out_data                    : out std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
+      out_count                   : out std_logic_vector(COUNT_WIDTH-1 downto 0);
+      out_last                    : out std_logic;
+      out_ctrl                    : out std_logic_vector(CTRL_WIDTH-1 downto 0)
     );
   end component;
 
@@ -395,63 +403,22 @@ package Stream_pkg is
   end component;
 
   -----------------------------------------------------------------------------
-  -- Component declarations for simulation-only helper units
-  -----------------------------------------------------------------------------
-  component StreamModelSource_mod is
-    generic (
-      DATA_WIDTH                : natural := 4;
-      SEED                      : positive;
-      NAME                      : string := ""
-    );
-    port (
-      clk                       : in  std_logic;
-      reset                     : in  std_logic;
-      out_valid                 : out std_logic;
-      out_ready                 : in  std_logic;
-      out_data                  : out std_logic_vector(DATA_WIDTH-1 downto 0)
-    );
-  end component;
-
-  component StreamModelSink_mod is
-    generic (
-      DATA_WIDTH                : natural := 4;
-      SEED                      : positive;
-      NAME                      : string := ""
-    );
-    port (
-      clk                       : in  std_logic;
-      reset                     : in  std_logic;
-      in_valid                  : in  std_logic;
-      in_ready                  : out std_logic;
-      in_data                   : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-      monitor                   : out std_logic_vector(DATA_WIDTH-1 downto 0)
-    );
-  end component;
-
-  component StreamModelMonitor_mod is
-    generic (
-      DATA_WIDTH                : natural := 4;
-      NAME                      : string
-    );
-    port (
-      clk                       : in  std_logic;
-      reset                     : in  std_logic;
-      in_valid                  : in  std_logic;
-      in_ready                  : in  std_logic;
-      in_data                   : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-      monitor                   : out std_logic_vector(DATA_WIDTH-1 downto 0)
-    );
-  end component;
-
-  -----------------------------------------------------------------------------
   -- Helper functions
   -----------------------------------------------------------------------------
   -- Resizes a count vector using the semantics of the Serializer,
   -- Parallelizer, and Gearbox components. That is, upsizing a vector that is
   -- zero results in the implicit '1' MSB being made explicit.
   function resize_count(
-    cnt   : std_logic_vector;
-    size  : natural
+    cnt     : std_logic_vector;
+    size    : natural
+  ) return std_logic_vector;
+
+  -- Converts a count/dvalid pair to a bitmask, where each bit represents the
+  -- validity of the respective element.
+  function element_mask(
+    count   : std_logic_vector;
+    dvalid  : std_logic;
+    bits    : natural
   ) return std_logic_vector;
 
 end Stream_pkg;
@@ -459,8 +426,8 @@ end Stream_pkg;
 package body Stream_pkg is
 
   function resize_count(
-    cnt   : std_logic_vector;
-    size  : natural
+    cnt     : std_logic_vector;
+    size    : natural
   ) return std_logic_vector is
     variable norm : std_logic_vector(cnt'length-1 downto 0);
     variable res  : std_logic_vector(size-1 downto 0);
@@ -474,6 +441,25 @@ package body Stream_pkg is
       res := norm(size-1 downto 0);
     end if;
     return res;
+  end function;
+
+  function element_mask(
+    count   : std_logic_vector;
+    dvalid  : std_logic;
+    bits    : natural
+  ) return std_logic_vector is
+    type ret_array_type is array(0 to bits-1) of std_logic_vector(bits-1 downto 0);
+    variable ret_array : ret_array_type;
+  begin
+    ret_array(0) := (others => dvalid);
+
+    for i in 1 to bits-1 loop
+      for j in i to bits-1 loop
+        ret_array(i)(j) := '0';
+      end loop;
+    end loop;
+
+    return ret_array(to_integer(unsigned(count)) mod bits);
   end function;
 
 end Stream_pkg;

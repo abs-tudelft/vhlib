@@ -18,11 +18,13 @@ use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.Utils.all;
-use work.Streams.all;
+use work.Stream_pkg.all;
 
 -- This unit calculates the prefix sum of an input stream of multiple elements
--- that are considered to be unsigned integers.
+-- that are considered to be unsigned integers. By default, the prefix sum is
+-- computed over last-delimited packets, but the sum can also be cleared at the
+-- start of each transfer using in_clear. Furthermore, in_initial can be driven
+-- to a nonzero value to start the prefix sum at an offset.
 --
 -- Symbol:   --->(Pr+)--->
 --
@@ -49,12 +51,8 @@ entity StreamPrefixSum is
 
     -- Width of control information. This information travels with the data
     -- stream but is left untouched. Must be at least 1 to prevent null vectors.
-    CTRL_WIDTH                  : natural  := 1;
+    CTRL_WIDTH                  : natural := 1
 
-    -- Whether to loop back the last sum value to the input unless last was
-    -- asserted in the previous handshake, or in_clear is asserted in the
-    -- current.
-    LOOPBACK                    : boolean := false
   );
   port (
 
@@ -68,49 +66,56 @@ entity StreamPrefixSum is
     ---------------------------------------------------------------------------
     -- Element input stream
     ---------------------------------------------------------------------------
-    -- in_clear is used to reset the prefix sum array to in_initial value
-    -- starting from the associated handshake.
-    -- in_skip is used to skip summing specific positions.
     in_valid                    : in  std_logic;
     in_ready                    : out std_logic;
-    in_clear                    : in  std_logic                                           := '0';
-    in_initial                  : in  std_logic_vector(DATA_WIDTH-1 downto 0)             := (others => '0');
+    in_dvalid                   : in  std_logic;
     in_data                     : in  std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
-    in_ctrl                     : in  std_logic_vector(CTRL_WIDTH-1 downto 0)             := (others => '0');
     in_count                    : in  std_logic_vector(COUNT_WIDTH-1 downto 0);
     in_last                     : in  std_logic;
+    in_ctrl                     : in  std_logic_vector(CTRL_WIDTH-1 downto 0) := (others => '0');
+
+    -- By default, the prefix sums are delimited by in_last. Additional
+    -- delimiters can be inserted using in_clear; asserting this signal resets
+    -- the prefix sum just before the first entry.
+    in_clear                    : in  std_logic := '0';
+
+    -- Allows the reset value for the prefix sum to be overridden. Used during
+    -- the first transfer of a packet and when in_clear is asserted.
+    in_initial                  : in  std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
 
     ---------------------------------------------------------------------------
     -- Prefix sums output stream
     ---------------------------------------------------------------------------
     out_valid                   : out std_logic;
     out_ready                   : in  std_logic;
+    out_dvalid                  : out std_logic;
     out_data                    : out std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
-    out_ctrl                    : out std_logic_vector(CTRL_WIDTH-1 downto 0);
     out_count                   : out std_logic_vector(COUNT_WIDTH-1 downto 0);
-    out_last                    : out std_logic
+    out_last                    : out std_logic;
+    out_ctrl                    : out std_logic_vector(CTRL_WIDTH-1 downto 0)
 
   );
 end StreamPrefixSum;
 
 architecture Behavioral of StreamPrefixSum is
-  -- Array representation of input values
+  -- Array representation of input values.
   type arr_t is array(natural range <>) of unsigned(DATA_WIDTH-1 downto 0);
 
-  -- Input array
+  -- Input array.
   signal in_array               : arr_t(COUNT_MAX-1 downto 0);
 
-  -- One hot encoded in_count
-  signal in_skip                : std_logic_vector(COUNT_MAX-1 downto 0);
+  -- Element mask.
+  signal in_mask                : std_logic_vector(COUNT_MAX-1 downto 0);
 
-  -- State machine types and signals
+  -- State machine types and signals.
   type state_type is record
-    first : std_logic;
-    sum   : arr_t(COUNT_MAX-1 downto 0);
-    count : std_logic_vector(COUNT_WIDTH-1 downto 0);
-    last  : std_logic;
-    valid : std_logic;
-    ctrl  : std_logic_vector(CTRL_WIDTH-1 downto 0);
+    first   : std_logic;
+    sum     : arr_t(COUNT_MAX-1 downto 0);
+    count   : std_logic_vector(COUNT_WIDTH-1 downto 0);
+    dvalid  : std_logic;
+    last    : std_logic;
+    valid   : std_logic;
+    ctrl    : std_logic_vector(CTRL_WIDTH-1 downto 0);
   end record;
 
   type input_type is record
@@ -123,14 +128,15 @@ architecture Behavioral of StreamPrefixSum is
 
 begin
 
-  in_skip <= not(work.Utils.cnt2oh(unsigned(in_count), COUNT_MAX));
+  -- Compute element mask.
+  in_mask <= element_mask(in_count, in_dvalid, COUNT_MAX);
 
-  -- Represent input data as array
-  input_deserialize: for I in 0 to COUNT_MAX-1 generate
-    in_array(I) <= unsigned(in_data((I+1)*DATA_WIDTH-1 downto I*DATA_WIDTH));
+  -- Represent input data as array.
+  input_deserialize: for idx in 0 to COUNT_MAX-1 generate
+    in_array(idx) <= unsigned(in_data((idx+1)*DATA_WIDTH-1 downto idx*DATA_WIDTH));
   end generate;
 
-  -- Sequential
+  -- Sequential process.
   seq: process(clk) is
   begin
     if rising_edge(clk) then
@@ -139,18 +145,16 @@ begin
       if reset = '1' then
         r.valid <= '0';
         r.first <= '1';
-        for I in 0 to COUNT_MAX-1 loop
-          r.sum(COUNT_MAX-1) <= (others => '0');
-        end loop;
+        r.sum(COUNT_MAX-1) <= (others => '0');
       end if;
     end if;
   end process;
 
-  -- Combinatorial
+  -- Combinatorial process.
   comb: process(
     r,
     reset,
-    in_valid, in_array, in_last, in_initial, in_clear, in_skip,
+    in_valid, in_array, in_last, in_initial, in_clear, in_mask,
     out_ready
   ) is
     variable v : state_type;
@@ -169,53 +173,47 @@ begin
       i.ready <= '0';
     end if;
 
-    -- If the output is handshaked, but there is no new data
+    -- If the output is handshaked, but there is no new data.
     if r.valid = '1' and out_ready = '1' and in_valid = '0' then
       -- Invalidate the output.
       v.valid                   := '0';
     end if;
 
-    -- If the input is valid, and the output has no data or is handshaked
+    -- If the input is valid, and the output has no data or is handshaked.
     -- we may advance the stream.
     if in_valid = '1' and
        (r.valid = '0' or (r.valid = '1' and out_ready = '1'))
     then
-      v.valid := '1';
-      v.ctrl  := in_ctrl;
-      v.last  := in_last;
-      v.count := in_count;
+      v.valid  := '1';
+      v.ctrl   := in_ctrl;
+      v.last   := in_last;
+      v.count  := in_count;
+      v.dvalid := in_dvalid;
 
-      -- For loopback mode
-      if LOOPBACK then
-        -- If this is the first handshake after reset or last, or when clear is,
-        -- asserted, use the initial value for the first sum.
-        if r.first = '1' or in_clear = '1' then
-          v.sum(0) := unsigned(in_initial) + in_array(0);
-          v.first := '0';
-        else
-          -- Otherwise get the last sum from the previous prefix sum for the
-          -- first sum
-          v.sum(0) := r.sum(COUNT_MAX-1) + in_array(0);
-        end if;
-
-        -- When this is the last handshake, the next handshake will be a first
-        -- handshake again.
-        if (in_last = '1') then
-          v.first := '1';
-        end if;
+      -- If this is the first handshake after reset or last, or when clear is
+      -- asserted, use the initial value for the first sum. Otherwise, continue
+      -- the prefix sum from the previous transfer.
+      if r.first = '1' or in_clear = '1' then
+        v.sum(0) := unsigned(in_initial) + in_array(0);
+        v.first := '0';
       else
-        -- If no loopback mode, just calculate the prefix sum of this MEPC
-        -- handshake.
-        v.sum(0) := unsigned(in_initial);
+        --
+        v.sum(0) := r.sum(COUNT_MAX-1) + in_array(0);
+      end if;
+
+      -- When this is the last handshake, the next handshake will be a first
+      -- handshake again.
+      if in_last = '1' then
+        v.first := '1';
       end if;
 
       -- Calculate prefix sums.
-      prefix_sum: for I in 1 to COUNT_MAX-1 loop
-        -- Only add when we shouldn't skip at some position.
-        if in_skip(I) = '0' then
-          v.sum(I) := in_array(I) + v.sum(I-1);
+      prefix_sum: for idx in 1 to COUNT_MAX-1 loop
+        -- Only add elements included in the mask
+        if in_mask(idx) = '1' then
+          v.sum(idx) := in_array(idx) + v.sum(idx-1);
         else
-          v.sum(I) := v.sum(I-1);
+          v.sum(idx) := v.sum(idx-1);
         end if;
       end loop;
     end if;
@@ -231,13 +229,14 @@ begin
   -- Connect registered outputs:
 
   -- Represent output array as single vector
-  output_serialize: for I in 0 to COUNT_MAX-1 generate
-    out_data((I+1)*DATA_WIDTH-1 downto I*DATA_WIDTH) <= std_logic_vector(r.sum(I));
+  output_serialize: for idx in 0 to COUNT_MAX-1 generate
+    out_data((idx+1)*DATA_WIDTH-1 downto idx*DATA_WIDTH) <= std_logic_vector(r.sum(idx));
   end generate;
 
-  out_valid <= r.valid;
-  out_count <= r.count;
-  out_last  <= r.last;
-  out_ctrl  <= r.ctrl;
+  out_valid  <= r.valid;
+  out_count  <= r.count;
+  out_dvalid <= r.dvalid;
+  out_last   <= r.last;
+  out_ctrl   <= r.ctrl;
 
 end Behavioral;
