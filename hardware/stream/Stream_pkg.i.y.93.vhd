@@ -337,25 +337,25 @@ package Stream_pkg is
   -----------------------------------------------------------------------------
   -- Component declarations for stream arithmetic
   -----------------------------------------------------------------------------
-  component StreamCounter is
+  component StreamElementCounter is
     generic (
-      IN_COUNT_WIDTH            : positive;
-      IN_COUNT_MAX              : positive;
-      OUT_COUNT_WIDTH           : positive;
-      OUT_COUNT_MAX             : positive
+      IN_COUNT_WIDTH              : positive := 1;
+      IN_COUNT_MAX                : positive := 1;
+      OUT_COUNT_WIDTH             : positive := 8;
+      OUT_COUNT_MAX               : positive := 256
     );
     port (
-      clk                       : in  std_logic;
-      reset                     : in  std_logic;
-      in_valid                  : in  std_logic;
-      in_ready                  : out std_logic;
-      in_last                   : in  std_logic;
-      in_count                  : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0);
-      in_dvalid                 : in  std_logic;
-      out_valid                 : out std_logic;
-      out_ready                 : in  std_logic;
-      out_count                 : out std_logic_vector(OUT_COUNT_WIDTH-1 downto 0);
-      out_last                  : out std_logic
+      clk                         : in  std_logic;
+      reset                       : in  std_logic;
+      in_valid                    : in  std_logic;
+      in_ready                    : out std_logic;
+      in_last                     : in  std_logic := '0';
+      in_count                    : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(1, IN_COUNT_WIDTH));
+      in_dvalid                   : in  std_logic := '1';
+      out_valid                   : out std_logic;
+      out_ready                   : in  std_logic;
+      out_count                   : out std_logic_vector(OUT_COUNT_WIDTH-1 downto 0);
+      out_last                    : out std_logic
     );
   end component;
 
