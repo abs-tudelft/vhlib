@@ -28,10 +28,6 @@ architecture TestCase of StreamSync_tc is
 begin
 
   basic_tc: process is
-    constant A_STR : string := "The Quick Brown Fox jumps over a Lazy Dog.";
-    constant B_STR : string := "A Quick Brown Fox jumps over the Lazy Dog.";
-    constant C_STR : string := "ThE quicK browN fox jumps over a Lazy Dog.";
-    constant D_STR : string := "A quIck brOwn foX jumps over the Lazy Dog.";
     variable a : streamsource_type;
     variable b : streamsource_type;
     variable c : streamsink_type;
@@ -47,14 +43,14 @@ begin
     a.set_x("1"); -- advance b
     a.set_y("1"); -- use b
     a.set_z("1"); -- enable c
-    a.push_str(A_STR);
+    a.push_str("The Quick Brown Fox jumps over a Lazy Dog.");
     a.transmit;
 
     b.set_total_cyc(-5, 5);
     b.set_x("1"); -- advance a
     b.set_y("1"); -- use a
     b.set_z("1"); -- enable d
-    b.push_str(B_STR);
+    b.push_str("A Quick Brown Fox jumps over the Lazy Dog.");
     b.transmit;
 
     c.set_total_cyc(-5, 5);
@@ -65,10 +61,120 @@ begin
 
     tc_wait_for(5 us);
 
-    tc_check(a.cq_get_d_str, A_STR);
-    tc_check(b.cq_get_d_str, B_STR);
-    tc_check(c.cq_get_d_str, C_STR);
-    tc_check(d.cq_get_d_str, D_STR);
+    tc_check(a.cq_get_d_str, "The Quick Brown Fox jumps over a Lazy Dog.");
+    tc_check(b.cq_get_d_str, "A Quick Brown Fox jumps over the Lazy Dog.");
+    tc_check(c.cq_get_d_str, "ThE quicK browN fox jumps over a Lazy Dog.");
+    tc_check(d.cq_get_d_str, "A quIck brOwn foX jumps over the Lazy Dog.");
+
+    tc_pass;
+    wait;
+  end process;
+
+  advance_tc: process is
+    variable a : streamsource_type;
+    variable b : streamsource_type;
+    variable c : streamsink_type;
+    variable d : streamsink_type;
+  begin
+    tc_open("StreamSync-advance", "tests advance enable.");
+    a.initialize("a");
+    b.initialize("b");
+    c.initialize("c");
+    d.initialize("d");
+
+    a.set_total_cyc(-5, 5);
+    a.set_x("1"); -- advance b
+    a.set_y("1"); -- use b
+    a.set_z("1"); -- enable c
+    a.push_str("The");
+    a.transmit;
+    a.set_x("0"); -- do not advance b
+    a.push_str(" quick brown");
+    a.transmit;
+    a.set_x("1"); -- advance b
+    a.push_str(" fox jumps over the dog.");
+    a.transmit;
+
+    b.set_total_cyc(-5, 5);
+    b.set_x("1"); -- advance a
+    b.set_y("1"); -- use a
+    b.set_z("1"); -- enable d
+    b.push_str("The fox jumps over the");
+    b.transmit;
+    b.set_x("0"); -- do not advance a
+    b.push_str(" lazy");
+    b.transmit;
+    b.set_x("1"); -- advance a
+    b.push_str(" dog.");
+    b.transmit;
+
+    c.set_total_cyc(-5, 5);
+    c.unblock;
+
+    d.set_total_cyc(-5, 5);
+    d.unblock;
+
+    tc_wait_for(5 us);
+
+    tc_check(a.cq_get_d_str, "The quick brown fox jumps over the dog.");
+    tc_check(b.cq_get_d_str, "The fox jumps over the lazy dog.");
+    tc_check(c.cq_get_d_str, "The quick brown fox jumps over the      dog.");
+    tc_check(d.cq_get_d_str, "The             fox jumps over the lazy dog.");
+
+    tc_pass;
+    wait;
+  end process;
+
+  enable_tc: process is
+    variable a : streamsource_type;
+    variable b : streamsource_type;
+    variable c : streamsink_type;
+    variable d : streamsink_type;
+  begin
+    tc_open("StreamSync-enable", "tests output enable.");
+    a.initialize("a");
+    b.initialize("b");
+    c.initialize("c");
+    d.initialize("d");
+
+    a.set_total_cyc(-5, 5);
+    a.set_x("1"); -- advance b
+    a.set_y("1"); -- use b
+    a.set_z("1"); -- enable c
+    a.push_str("The");
+    a.transmit;
+    a.set_z("0"); -- disable c
+    a.push_str(" quick brown");
+    a.transmit;
+    a.set_z("1"); -- enable c
+    a.push_str(" fox jumps over the lazy dog.");
+    a.transmit;
+
+    b.set_total_cyc(-5, 5);
+    b.set_x("1"); -- advance a
+    b.set_y("1"); -- use a
+    b.set_z("1"); -- enable d
+    b.push_str("The quick brown fox jumps over the");
+    b.transmit;
+    b.set_z("0"); -- disable d
+    b.push_str(" lazy");
+    b.transmit;
+    b.set_z("1"); -- enable d
+    b.push_str(" dog.");
+    b.transmit;
+
+    c.set_total_cyc(-5, 5);
+    c.unblock;
+
+    d.set_total_cyc(-5, 5);
+    d.unblock;
+
+    tc_wait_for(5 us);
+
+    tc_check(a.cq_get_d_str, "The quick brown fox jumps over the lazy dog.");
+    tc_check(b.cq_get_d_str, "The quick brown fox jumps over the lazy dog.");
+    tc_check(c.cq_get_d_str, "The fox jumps over the lazy dog.");
+    tc_check(d.cq_get_d_str, "The quick brown fox jumps over the dog.");
 
     tc_pass;
     wait;

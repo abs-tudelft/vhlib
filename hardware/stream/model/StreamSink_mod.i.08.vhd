@@ -201,7 +201,7 @@ begin
           min_total_low   := strsink.get_int(NAME & ".uq.min_total_low");
           min_total_high  := strsink.get_int(NAME & ".uq.min_total_high");
           burst_low       := strsink.get_int(NAME & ".uq.burst_low");
-          burst_high    	:= strsink.get_int(NAME & ".uq.burst_high");
+          burst_high      := strsink.get_int(NAME & ".uq.burst_high");
           burst_remain    := 0;
           xfer_count      := 0;
           el_count        := 0;

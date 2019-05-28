@@ -224,6 +224,8 @@ begin
 
       -- Handle reset.
       if to_X01(reset) = '1' then
+        strmon.delete(NAME & ".pq");
+        strmon.delete(NAME & ".cq");
         x_seen := false;
         valid_cycles := 0;
         ready_cycles := 0;

@@ -35,13 +35,13 @@ architecture TestBench of StreamBuffer_tb is
   signal clk                    : std_logic;
   signal reset                  : std_logic;
 
-  signal valid_a                : std_logic;
-  signal ready_a                : std_logic;
-  signal data_a                 : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal a_valid                : std_logic;
+  signal a_ready                : std_logic;
+  signal a_data                 : std_logic_vector(DATA_WIDTH-1 downto 0);
 
-  signal valid_b                : std_logic;
-  signal ready_b                : std_logic;
-  signal data_b                 : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal b_valid                : std_logic;
+  signal b_ready                : std_logic;
+  signal b_data                 : std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin
 
@@ -51,7 +51,7 @@ begin
       reset                     => reset
     );
 
-  source_a: StreamSource_mod
+  a_source: StreamSource_mod
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => DATA_WIDTH
@@ -59,9 +59,9 @@ begin
     port map (
       clk                       => clk,
       reset                     => reset,
-      valid                     => valid_a,
-      ready                     => ready_a,
-      data                      => data_a
+      valid                     => a_valid,
+      ready                     => a_ready,
+      data                      => a_data
     );
 
   uut: StreamBuffer
@@ -72,15 +72,15 @@ begin
     port map (
       clk                       => clk,
       reset                     => reset,
-      in_valid                  => valid_a,
-      in_ready                  => ready_a,
-      in_data                   => data_a,
-      out_valid                 => valid_b,
-      out_ready                 => ready_b,
-      out_data                  => data_b
+      in_valid                  => a_valid,
+      in_ready                  => a_ready,
+      in_data                   => a_data,
+      out_valid                 => b_valid,
+      out_ready                 => b_ready,
+      out_data                  => b_data
     );
 
-  sink_b: StreamSink_mod
+  b_sink: StreamSink_mod
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => DATA_WIDTH
@@ -88,9 +88,9 @@ begin
     port map (
       clk                       => clk,
       reset                     => reset,
-      valid                     => valid_b,
-      ready                     => ready_b,
-      data                      => data_b
+      valid                     => b_valid,
+      ready                     => b_ready,
+      data                      => b_data
     );
 
 end TestBench;
