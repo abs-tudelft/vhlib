@@ -68,7 +68,7 @@ entity StreamGearboxParallelizer is
 
     -- Width of the part of the input stream data vector that is to be
     -- parallelized.
-    DATA_WIDTH                  : natural;
+    ELEMENT_WIDTH               : natural;
 
     -- Width of control information present on the MSB side of the input data
     -- vector that should NOT be parallized. This control data is taken from
@@ -108,14 +108,14 @@ entity StreamGearboxParallelizer is
     -- Input stream.
     in_valid                    : in  std_logic;
     in_ready                    : out std_logic;
-    in_data                     : in  std_logic_vector(CTRL_WIDTH+IN_COUNT_MAX*DATA_WIDTH-1 downto 0);
+    in_data                     : in  std_logic_vector(CTRL_WIDTH+IN_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
     in_count                    : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(IN_COUNT_MAX, IN_COUNT_WIDTH));
     in_last                     : in  std_logic := '0';
 
     -- Output stream.
     out_valid                   : out std_logic;
     out_ready                   : in  std_logic;
-    out_data                    : out std_logic_vector(CTRL_WIDTH+OUT_COUNT_MAX*DATA_WIDTH-1 downto 0);
+    out_data                    : out std_logic_vector(CTRL_WIDTH+OUT_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
     out_count                   : out std_logic_vector(OUT_COUNT_WIDTH-1 downto 0);
     out_last                    : out std_logic
 
@@ -236,14 +236,14 @@ begin
         -- give LSB-first MSB-aligned or vice versa).
         for i in 0 to BUN_COUNT_MAX-1 loop
           if bun_count = std_logic_vector(to_unsigned(i+1, BUN_COUNT_WIDTH)) then
-            out_data((i+1)*IN_COUNT_MAX*DATA_WIDTH-1 downto i*IN_COUNT_MAX*DATA_WIDTH)
-              <= in_data(IN_COUNT_MAX*DATA_WIDTH-1 downto 0);
+            out_data((i+1)*IN_COUNT_MAX*ELEMENT_WIDTH-1 downto i*IN_COUNT_MAX*ELEMENT_WIDTH)
+              <= in_data(IN_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
           end if;
         end loop;
 
         -- Always register the control part of the stream data.
-        out_data(CTRL_WIDTH+OUT_COUNT_MAX*DATA_WIDTH-1 downto OUT_COUNT_MAX*DATA_WIDTH-1)
-          <= in_data(CTRL_WIDTH+IN_COUNT_MAX*DATA_WIDTH-1 downto IN_COUNT_MAX*DATA_WIDTH-1);
+        out_data(CTRL_WIDTH+OUT_COUNT_MAX*ELEMENT_WIDTH-1 downto OUT_COUNT_MAX*ELEMENT_WIDTH-1)
+          <= in_data(CTRL_WIDTH+IN_COUNT_MAX*ELEMENT_WIDTH-1 downto IN_COUNT_MAX*ELEMENT_WIDTH-1);
         out_count <= std_logic_vector(unsigned(item_count) + unsigned(in_count_conv));
         out_last <= in_last;
 

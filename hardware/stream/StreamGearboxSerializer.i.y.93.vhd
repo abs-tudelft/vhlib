@@ -32,7 +32,7 @@ entity StreamGearboxSerializer is
   generic (
 
     -- Width of the serialized part of the output stream data vector.
-    DATA_WIDTH                  : natural;
+    ELEMENT_WIDTH               : natural;
 
     -- Width of control information present on the MSB side of the input data
     -- vector that should NOT be serialized. This control data is replicated
@@ -77,14 +77,14 @@ entity StreamGearboxSerializer is
     -- Input stream.
     in_valid                    : in  std_logic;
     in_ready                    : out std_logic;
-    in_data                     : in  std_logic_vector(CTRL_WIDTH+IN_COUNT_MAX*DATA_WIDTH-1 downto 0);
+    in_data                     : in  std_logic_vector(CTRL_WIDTH+IN_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
     in_count                    : in  std_logic_vector(IN_COUNT_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(IN_COUNT_MAX, IN_COUNT_WIDTH));
     in_last                     : in  std_logic := '1';
 
     -- Output stream.
     out_valid                   : out std_logic;
     out_ready                   : in  std_logic;
-    out_data                    : out std_logic_vector(CTRL_WIDTH+OUT_COUNT_MAX*DATA_WIDTH-1 downto 0);
+    out_data                    : out std_logic_vector(CTRL_WIDTH+OUT_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
     out_count                   : out std_logic_vector(OUT_COUNT_WIDTH-1 downto 0);
     out_last                    : out std_logic
 
@@ -101,7 +101,7 @@ architecture Behavioral of StreamGearboxSerializer is
   signal last_subword           : std_logic;
 
   -- Data holding/shift registers.
-  signal data_r                 : std_logic_vector(CTRL_WIDTH+IN_COUNT_MAX*DATA_WIDTH-1 downto 0);
+  signal data_r                 : std_logic_vector(CTRL_WIDTH+IN_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
   signal last_r                 : std_logic;
 
   -- Number of valid subwords remaining in the shift register. 0 implies a
@@ -162,8 +162,8 @@ begin
       elsif reg_valid = '1' and out_ready = '1' then
 
         -- Right-shift the data vector, ignoring the control data.
-        data_r(IN_COUNT_MAX*DATA_WIDTH-1 - OUT_COUNT_MAX*DATA_WIDTH downto 0)
-          <= data_r(IN_COUNT_MAX*DATA_WIDTH-1 downto OUT_COUNT_MAX*DATA_WIDTH);
+        data_r(IN_COUNT_MAX*ELEMENT_WIDTH-1 - OUT_COUNT_MAX*ELEMENT_WIDTH downto 0)
+          <= data_r(IN_COUNT_MAX*ELEMENT_WIDTH-1 downto OUT_COUNT_MAX*ELEMENT_WIDTH);
 
         -- Decrement the count, or if this was the last word, invalidate the
         -- shift register.
@@ -187,12 +187,12 @@ begin
   -- Avoid null ranges in assignments because some tools don't like them.
   ctrl_data_gen: if CTRL_WIDTH > 0 generate
   begin
-    out_data <= data_r(CTRL_WIDTH + IN_COUNT_MAX*DATA_WIDTH-1 downto IN_COUNT_MAX*DATA_WIDTH)
-              & data_r(OUT_COUNT_MAX*DATA_WIDTH-1 downto 0);
+    out_data <= data_r(CTRL_WIDTH + IN_COUNT_MAX*ELEMENT_WIDTH-1 downto IN_COUNT_MAX*ELEMENT_WIDTH)
+              & data_r(OUT_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
   end generate;
   no_ctrl_data_gen: if CTRL_WIDTH = 0 generate
   begin
-    out_data <= data_r(OUT_COUNT_MAX*DATA_WIDTH-1 downto 0);
+    out_data <= data_r(OUT_COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
   end generate;
 
   -- Set the last flag when this is the last subword AND the last flag was set
