@@ -15,26 +15,28 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
 
 library work;
 use work.Stream_pkg.all;
-use work.StreamSim_pkg.all;
-use work.UtilInt_pkg.all;
+use work.ClockGen_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
-entity StreamNormalizer_4_4_2_3_tc is
-end StreamNormalizer_4_4_2_3_tc;
+entity StreamReshaperCtrl_1_1_7_3_tc is
+end StreamReshaperCtrl_1_1_7_3_tc;
 
-architecture TestCase of StreamNormalizer_4_4_2_3_tc is
+architecture TestBench of StreamReshaperCtrl_1_1_7_3_tc is
 begin
 
-  tb: entity work.StreamNormalizer_tb
+  tv: entity work.StreamReshaperCtrl_tv;
+
+  tb: entity work.StreamReshaperCtrl_tb
     generic map (
-      ELEMENT_WIDTH             => 4,
-      COUNT_MAX                 => 4,
-      COUNT_WIDTH               => 2,
-      REQ_COUNT_WIDTH           => 3
+      IN_COUNT_MAX              => 1,
+      IN_COUNT_WIDTH            => 1,
+      OUT_COUNT_MAX             => 7,
+      OUT_COUNT_WIDTH           => 3
     );
 
-end TestCase;
+end TestBench;
 

@@ -187,7 +187,7 @@ begin
 
         -- Also make a packet queue available. A packet consists itself of a
         -- queue of elements.
-        if to_X01(dvalid) = '1' and not is_X(count) and not x_seen and not unstable then
+        if to_X01(dvalid) = '1' and not is_X(count) then
           count_v := to_integer(unsigned(count));
           if count_v = 0 and (COUNT_MAX = 2**COUNT_WIDTH) then
             count_v := COUNT_MAX;
@@ -199,9 +199,9 @@ begin
             strmon.set_slv(NAME & ".pq.dq", data((i+1)*ELEMENT_WIDTH-1 downto i*ELEMENT_WIDTH));
             strmon.push(NAME & ".pq.dq");
           end loop;
-          if to_X01(last) = '1' then
-            strmon.push(NAME & ".pq");
-          end if;
+        end if;
+        if to_X01(last) = '1' then
+          strmon.push(NAME & ".pq");
         end if;
 
         -- Reset transfer state.

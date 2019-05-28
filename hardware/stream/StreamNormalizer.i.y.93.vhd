@@ -124,6 +124,9 @@ architecture Behavioral of StreamNormalizer is
   -- Read-side FIFO state update signals.
   signal read_ptr_add           : std_logic_vector(FIFO_DEPTH_LOG2 downto 0);
 
+  -- Internal copy of in_ready.
+  signal in_ready_i             : std_logic;
+
 begin
 
   -- Work out what to write to the FIFO and by what to increment the write_ptr.
@@ -212,8 +215,28 @@ begin
 
     -- Signal ready when our FIFO is empty enough.
     in_ready <= fifo_ready;
+    in_ready_i <= fifo_ready;
 
   end process;
+
+  -- Report a warning when a null+last transfer is encountered; these are not
+  -- supported/ignored.
+  -- pragma translate_off
+  null_last_warning_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '0' then
+        if in_valid = '1' and in_ready_i = '1' then
+          if in_dvalid = '0' and in_last = '1' then
+            report "Ignoring transfer with dvalid low and last high "
+              & "- not supported by StreamNormalizer!"
+              severity warning;
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+  -- pragma translate_on
 
   -- The FIFO memory is simply implemented as a number of fabric registers with
   -- write enables.
