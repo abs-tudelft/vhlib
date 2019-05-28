@@ -18,27 +18,32 @@ use ieee.numeric_std.all;
 
 library work;
 use work.Stream_pkg.all;
-use work.StreamSim_pkg.all;
+use work.ClockGen_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
 entity StreamPRNG_tb is
   generic (
-    DATA_WIDTH                  : natural := 8
-  );
-  port (
-    clk                         : in  std_logic;
-    reset                       : in  std_logic
+    DATA_WIDTH                  : natural
   );
 end StreamPRNG_tb;
 
 architecture TestBench of StreamPRNG_tb is
 
-  signal seed                   : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+  signal clk                    : std_logic;
+  signal reset                  : std_logic;
 
-  signal out_valid              : std_logic;
-  signal out_ready              : std_logic;
-  signal out_data               : std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal a_valid                : std_logic;
+  signal a_ready                : std_logic;
+  signal a_data                 : std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin
+
+  clkgen: ClockGen_mod
+    port map (
+      clk                       => clk,
+      reset                     => reset
+    );
 
   uut: StreamPRNG
     generic map (
@@ -47,24 +52,22 @@ begin
     port map (
       clk                       => clk,
       reset                     => reset,
-      seed                      => seed,
-      out_valid                 => out_valid,
-      out_ready                 => out_ready,
-      out_data                  => out_data
+      out_valid                 => a_valid,
+      out_ready                 => a_ready,
+      out_data                  => a_data
     );
 
-  cons: StreamModelSink_mod
+  a_sink: StreamSink_mod
     generic map (
-      DATA_WIDTH                => DATA_WIDTH,
-      SEED                      => 1,
-      NAME                      => "out"
+      NAME                      => "a",
+      ELEMENT_WIDTH             => DATA_WIDTH
     )
     port map (
       clk                       => clk,
       reset                     => reset,
-      in_valid                  => out_valid,
-      in_ready                  => out_ready,
-      in_data                   => out_data
+      valid                     => a_valid,
+      ready                     => a_ready,
+      data                      => a_data
     );
 
 end TestBench;

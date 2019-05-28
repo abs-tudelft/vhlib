@@ -15,40 +15,28 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
 
 library work;
-use work.StreamSim_pkg.all;
+use work.Stream_pkg.all;
+use work.ClockGen_pkg.all;
+use work.StreamSource_pkg.all;
+use work.StreamSink_pkg.all;
 
-entity StreamPRNG_8_tc is
-end StreamPRNG_8_tc;
+entity StreamPRNG_12_tc is
+end StreamPRNG_12_tc;
 
-architecture TestCase of StreamPRNG_8_tc is
-
-  constant DATA_WIDTH           : positive := 8;
-
-  signal clk                    : std_logic;
-  signal reset                  : std_logic;
-
+architecture TestBench of StreamPRNG_12_tc is
 begin
 
   tv: entity work.StreamPRNG_tv
     generic map (
-      DATA_WIDTH                => DATA_WIDTH
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset
+      DATA_WIDTH                => 12
     );
 
   tb: entity work.StreamPRNG_tb
     generic map (
-      DATA_WIDTH                => DATA_WIDTH
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset
+      DATA_WIDTH                => 12
     );
 
-end TestCase;
+end TestBench;
 
