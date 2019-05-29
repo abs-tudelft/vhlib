@@ -85,7 +85,7 @@ begin
       pipe_output               => pipe_output
     );
 
-  uut_rotate_left: entity work.StreamPipelineBarrel is
+  uut_rotate_left: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_COUNT             => 8,
       AMOUNT_WIDTH              => 4,
@@ -101,7 +101,7 @@ begin
       out_data                  => pipe_output(7 downto 0)
     );
 
-  uut_shift_left: entity work.StreamPipelineBarrel is
+  uut_shift_left: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_COUNT             => 8,
       AMOUNT_WIDTH              => 4,
@@ -117,7 +117,7 @@ begin
       out_data                  => pipe_output(15 downto 8)
     );
 
-  uut_arithmetic_left: entity work.StreamPipelineBarrel is
+  uut_arithmetic_left: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_COUNT             => 8,
       AMOUNT_WIDTH              => 4,
@@ -133,7 +133,7 @@ begin
       out_data                  => pipe_output(23 downto 16)
     );
 
-  uut_arithmetic_left_multi: entity work.StreamPipelineBarrel is
+  uut_arithmetic_left_multi: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_WIDTH             => 2,
       ELEMENT_COUNT             => 4,
@@ -150,7 +150,7 @@ begin
       out_data                  => pipe_output(31 downto 24)
     );
 
-  uut_rotate_right: entity work.StreamPipelineBarrel is
+  uut_rotate_right: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_COUNT             => 8,
       AMOUNT_WIDTH              => 4,
@@ -166,7 +166,7 @@ begin
       out_data                  => pipe_output(39 downto 32)
     );
 
-  uut_shift_right: entity work.StreamPipelineBarrel is
+  uut_shift_right: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_COUNT             => 8,
       AMOUNT_WIDTH              => 4,
@@ -182,7 +182,7 @@ begin
       out_data                  => pipe_output(47 downto 40)
     );
 
-  uut_arithmetic_right: entity work.StreamPipelineBarrel is
+  uut_arithmetic_right: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_COUNT             => 8,
       AMOUNT_WIDTH              => 4,
@@ -198,7 +198,7 @@ begin
       out_data                  => pipe_output(55 downto 48)
     );
 
-  uut_arithmetic_right_multi: entity work.StreamPipelineBarrel is
+  uut_arithmetic_right_multi: entity work.StreamPipelineBarrel
     generic map (
       ELEMENT_WIDTH             => 2,
       ELEMENT_COUNT             => 4,

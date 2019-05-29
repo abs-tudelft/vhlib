@@ -246,6 +246,7 @@ package body TestCase_pkg is
         when 'H' => ret(si) := 'H';
         when '-' => ret(si) := '-';
       end case;
+      si := si + 1;
     end loop;
     ret(1) := '"';
     ret(slv'length + 2) := '"';
