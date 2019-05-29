@@ -83,7 +83,7 @@ begin
 
   uut: StreamPrefixSum
     generic map (
-      DATA_WIDTH                => ELEMENT_WIDTH,
+      ELEMENT_WIDTH             => ELEMENT_WIDTH,
       COUNT_MAX                 => COUNT_MAX,
       COUNT_WIDTH               => COUNT_WIDTH
     )

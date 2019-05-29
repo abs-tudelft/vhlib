@@ -38,7 +38,7 @@ entity StreamPrefixSum is
     -- Input configuration
     ---------------------------------------------------------------------------
     -- Width of a data element, assumed to be an unsigned integer.
-    DATA_WIDTH                  : natural;
+    ELEMENT_WIDTH               : natural;
 
     -- Maximum number of elements per clock in the data input stream.
     COUNT_MAX                   : natural;
@@ -69,7 +69,7 @@ entity StreamPrefixSum is
     in_valid                    : in  std_logic;
     in_ready                    : out std_logic;
     in_dvalid                   : in  std_logic;
-    in_data                     : in  std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
+    in_data                     : in  std_logic_vector(COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
     in_count                    : in  std_logic_vector(COUNT_WIDTH-1 downto 0);
     in_last                     : in  std_logic;
     in_ctrl                     : in  std_logic_vector(CTRL_WIDTH-1 downto 0) := (others => '0');
@@ -81,7 +81,7 @@ entity StreamPrefixSum is
 
     -- Allows the reset value for the prefix sum to be overridden. Used during
     -- the first transfer of a packet and when in_clear is asserted.
-    in_initial                  : in  std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+    in_initial                  : in  std_logic_vector(ELEMENT_WIDTH-1 downto 0) := (others => '0');
 
     ---------------------------------------------------------------------------
     -- Prefix sums output stream
@@ -89,7 +89,7 @@ entity StreamPrefixSum is
     out_valid                   : out std_logic;
     out_ready                   : in  std_logic;
     out_dvalid                  : out std_logic;
-    out_data                    : out std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
+    out_data                    : out std_logic_vector(COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
     out_count                   : out std_logic_vector(COUNT_WIDTH-1 downto 0);
     out_last                    : out std_logic;
     out_ctrl                    : out std_logic_vector(CTRL_WIDTH-1 downto 0)
@@ -98,145 +98,85 @@ entity StreamPrefixSum is
 end StreamPrefixSum;
 
 architecture Behavioral of StreamPrefixSum is
-  -- Array representation of input values.
-  type arr_t is array(natural range <>) of unsigned(DATA_WIDTH-1 downto 0);
 
-  -- Input array.
-  signal in_array               : arr_t(COUNT_MAX-1 downto 0);
+  -- Internal copy of out_valid.
+  signal out_valid_i            : std_logic;
 
-  -- Element mask.
-  signal in_mask                : std_logic_vector(COUNT_MAX-1 downto 0);
+  -- Register that stores whether the next transfer will be the first in the
+  -- packet.
+  signal first                  : std_logic;
 
-  -- State machine types and signals.
-  type state_type is record
-    first   : std_logic;
-    sum     : arr_t(COUNT_MAX-1 downto 0);
-    count   : std_logic_vector(COUNT_WIDTH-1 downto 0);
-    dvalid  : std_logic;
-    last    : std_logic;
-    valid   : std_logic;
-    ctrl    : std_logic_vector(CTRL_WIDTH-1 downto 0);
-  end record;
-
-  type input_type is record
-    ready : std_logic;
-  end record;
-
-  signal r : state_type;
-  signal d : state_type;
-  signal i : input_type;
+  -- Accumulator register.
+  signal accumulator            : unsigned(ELEMENT_WIDTH-1 downto 0);
 
 begin
 
-  -- Compute element mask.
-  in_mask <= element_mask(in_count, in_dvalid, COUNT_MAX);
-
-  -- Represent input data as array.
-  input_deserialize: for idx in 0 to COUNT_MAX-1 generate
-    in_array(idx) <= unsigned(in_data((idx+1)*DATA_WIDTH-1 downto idx*DATA_WIDTH));
-  end generate;
-
-  -- Sequential process.
-  seq: process(clk) is
+  reg_proc: process (clk) is
+    variable out_valid_v        : std_logic;
+    variable first_v            : std_logic;
+    variable accumulator_v      : unsigned(ELEMENT_WIDTH-1 downto 0);
+    variable mask               : std_logic_vector(COUNT_MAX-1 downto 0);
+    variable hi, lo             : natural;
   begin
     if rising_edge(clk) then
-      r <= d;
-      -- Reset
-      if reset = '1' then
-        r.valid <= '0';
-        r.first <= '1';
-        r.sum(COUNT_MAX-1) <= (others => '0');
-      end if;
-    end if;
-  end process;
+      out_valid_v   := out_valid_i;
+      first_v       := first;
+      accumulator_v := accumulator;
 
-  -- Combinatorial process.
-  comb: process(
-    r,
-    reset,
-    in_valid, in_array, in_last, in_initial, in_clear, in_mask,
-    out_ready
-  ) is
-    variable v : state_type;
-  begin
-    v := r;
-
-    -- Input side is ready by default, unless its being reset.
-    if reset /= '1' then
-      i.ready <= '1';
-    else
-      i.ready <= '0';
-    end if;
-
-    -- Stall input if output is valid but not handshaked.
-    if r.valid = '1' and out_ready = '0' then
-      i.ready <= '0';
-    end if;
-
-    -- If the output is handshaked, but there is no new data.
-    if r.valid = '1' and out_ready = '1' and in_valid = '0' then
-      -- Invalidate the output.
-      v.valid                   := '0';
-    end if;
-
-    -- If the input is valid, and the output has no data or is handshaked.
-    -- we may advance the stream.
-    if in_valid = '1' and
-       (r.valid = '0' or (r.valid = '1' and out_ready = '1'))
-    then
-      v.valid  := '1';
-      v.ctrl   := in_ctrl;
-      v.last   := in_last;
-      v.count  := in_count;
-      v.dvalid := in_dvalid;
-
-      -- If this is the first handshake after reset or last, or when clear is
-      -- asserted, use the initial value for the first sum. Otherwise, continue
-      -- the prefix sum from the previous transfer.
-      if r.first = '1' or in_clear = '1' then
-        v.sum(0) := unsigned(in_initial) + in_array(0);
-        v.first := '0';
-      else
-        --
-        v.sum(0) := r.sum(COUNT_MAX-1) + in_array(0);
+      -- Invalidate output when handshaked.
+      if out_ready = '1' then
+        out_valid_v := '0';
       end if;
 
-      -- When this is the last handshake, the next handshake will be a first
-      -- handshake again.
-      if in_last = '1' then
-        v.first := '1';
-      end if;
+      -- Handle incoming requests when we can.
+      if out_valid_v = '0' and in_valid = '1' then
 
-      -- Calculate prefix sums.
-      prefix_sum: for idx in 1 to COUNT_MAX-1 loop
-        -- Only add elements included in the mask
-        if in_mask(idx) = '1' then
-          v.sum(idx) := in_array(idx) + v.sum(idx-1);
-        else
-          v.sum(idx) := v.sum(idx-1);
+        -- Handle accumulator reset.
+        if first_v = '1' or in_clear = '1' then
+          accumulator_v := unsigned(in_initial);
         end if;
-      end loop;
+        first_v := in_last;
+
+        -- Compute prefix sums.
+        mask := element_mask(in_count, in_dvalid, COUNT_MAX);
+        for i in 0 to COUNT_MAX-1 loop
+
+          -- Compute data vector indices for the current element.
+          lo := i * ELEMENT_WIDTH;
+          hi := lo + ELEMENT_WIDTH - 1;
+
+          -- Only accumulate if the element is valid.
+          if mask(i) = '1' then
+            accumulator_v := accumulator_v + unsigned(in_data(hi downto lo));
+          end if;
+
+          -- Output the sum so far.
+          out_data(hi downto lo) <= std_logic_vector(accumulator_v);
+
+        end loop;
+
+        -- Pass control signals through.
+        out_valid_v := '1';
+        out_dvalid  <= in_dvalid;
+        out_count   <= in_count;
+        out_last    <= in_last;
+        out_ctrl    <= in_ctrl;
+
+      end if;
+
+      -- Handle reset.
+      if reset = '1' then
+        out_valid_v := '0';
+        first_v     := '1';
+      end if;
+
+      out_valid_i <= out_valid_v;
+      first       <= first_v;
+      accumulator <= accumulator_v;
     end if;
-
-    -- Outputs to be registered.
-    d <= v;
-
-    -- Outputs not to be registered.
-    in_ready <= i.ready;
   end process;
 
-
-  -- Connect registered outputs:
-
-  -- Represent output array as single vector
-  output_serialize: for idx in 0 to COUNT_MAX-1 generate
-    out_data((idx+1)*DATA_WIDTH-1 downto idx*DATA_WIDTH) <= std_logic_vector(r.sum(idx));
-  end generate;
-
-  out_valid  <= r.valid;
-  out_count  <= r.count;
-  out_dvalid <= r.dvalid;
-  out_last   <= r.last;
-  out_ctrl   <= r.ctrl;
+  in_ready <= (out_ready or not out_valid_i) and not reset;
+  out_valid <= out_valid_i;
 
 end Behavioral;

@@ -361,7 +361,7 @@ package Stream_pkg is
 
   component StreamPrefixSum is
     generic (
-      DATA_WIDTH                  : natural;
+      ELEMENT_WIDTH               : natural;
       COUNT_MAX                   : natural;
       COUNT_WIDTH                 : natural;
       CTRL_WIDTH                  : natural := 1
@@ -372,16 +372,16 @@ package Stream_pkg is
       in_valid                    : in  std_logic;
       in_ready                    : out std_logic;
       in_dvalid                   : in  std_logic;
-      in_data                     : in  std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
+      in_data                     : in  std_logic_vector(COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
       in_count                    : in  std_logic_vector(COUNT_WIDTH-1 downto 0);
       in_last                     : in  std_logic;
       in_ctrl                     : in  std_logic_vector(CTRL_WIDTH-1 downto 0) := (others => '0');
       in_clear                    : in  std_logic := '0';
-      in_initial                  : in  std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+      in_initial                  : in  std_logic_vector(ELEMENT_WIDTH-1 downto 0) := (others => '0');
       out_valid                   : out std_logic;
       out_ready                   : in  std_logic;
       out_dvalid                  : out std_logic;
-      out_data                    : out std_logic_vector(COUNT_MAX*DATA_WIDTH-1 downto 0);
+      out_data                    : out std_logic_vector(COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
       out_count                   : out std_logic_vector(COUNT_WIDTH-1 downto 0);
       out_last                    : out std_logic;
       out_ctrl                    : out std_logic_vector(CTRL_WIDTH-1 downto 0)
@@ -451,7 +451,7 @@ package body Stream_pkg is
     type ret_array_type is array(0 to bits-1) of std_logic_vector(bits-1 downto 0);
     variable ret_array : ret_array_type;
   begin
-    ret_array(0) := (others => dvalid);
+    ret_array := (others => (others => dvalid));
 
     for i in 1 to bits-1 loop
       for j in i to bits-1 loop
