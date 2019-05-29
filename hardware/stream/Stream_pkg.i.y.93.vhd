@@ -339,10 +339,10 @@ package Stream_pkg is
   -----------------------------------------------------------------------------
   component StreamElementCounter is
     generic (
-      IN_COUNT_WIDTH              : positive := 1;
-      IN_COUNT_MAX                : positive := 1;
-      OUT_COUNT_WIDTH             : positive := 8;
-      OUT_COUNT_MAX               : positive := 256
+      IN_COUNT_WIDTH              : natural := 1;
+      IN_COUNT_MAX                : natural := 1;
+      OUT_COUNT_WIDTH             : natural := 8;
+      OUT_COUNT_MAX               : natural := 256
     );
     port (
       clk                         : in  std_logic;
@@ -390,7 +390,7 @@ package Stream_pkg is
 
   component StreamPRNG is
     generic (
-      DATA_WIDTH                : positive
+      DATA_WIDTH                : natural
     );
     port (
       clk                       : in  std_logic;

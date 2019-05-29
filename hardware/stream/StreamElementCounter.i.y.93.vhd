@@ -29,18 +29,18 @@ use work.UtilInt_pkg.all;
 entity StreamElementCounter is
   generic (
     -- Width of the count input. Must be at least one to prevent null ranges.
-    IN_COUNT_WIDTH              : positive := 1;
+    IN_COUNT_WIDTH              : natural := 1;
 
     -- Maximum input count
-    IN_COUNT_MAX                : positive := 1;
+    IN_COUNT_MAX                : natural := 1;
 
     -- Width of the count output.
-    OUT_COUNT_WIDTH             : positive := 8;
+    OUT_COUNT_WIDTH             : natural := 8;
 
     -- Maximum output count. If this is larger than what is representable with
     -- an unsigned integer of size OUT_COUNT_WIDTH this value is ignored and
     -- 2**OUT_COUNT_WIDTH - 1 is used instead.
-    OUT_COUNT_MAX               : positive := 256
+    OUT_COUNT_MAX               : natural := 256
   );
   port (
 

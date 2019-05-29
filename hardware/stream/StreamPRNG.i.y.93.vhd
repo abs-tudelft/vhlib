@@ -27,7 +27,7 @@ entity StreamPRNG is
   generic (
 
     -- Width of the output stream
-    DATA_WIDTH                  : positive := 32
+    DATA_WIDTH                  : natural := 32
 
   );
   port (
