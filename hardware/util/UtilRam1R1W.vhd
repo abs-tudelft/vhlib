@@ -64,8 +64,6 @@ architecture Behavioral of UtilRam1R1W is
 
   -- Shared variable to represent the memory.
   type mem_type is array (2**DEPTH_LOG2-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
-  -- Shared variable needs to be protected for synthesis by vivado.
-  -- Use a signal instead.
   signal mem : mem_type;
 
 begin
