@@ -26,7 +26,7 @@ use work.StreamMonitor_pkg.all;
 -- This unit models a stream sink, controlled through the procedures in
 -- StreamSink_pkg.
 
-entity StreamSink_mod is
+entity StreamSink_mdl is
   generic (
     NAME                        : string := "noname";
     ELEMENT_WIDTH               : natural := 8;
@@ -51,9 +51,9 @@ entity StreamSink_mod is
     y                           : in  std_logic_vector(Y_WIDTH-1 downto 0) := (others => '0');
     z                           : in  std_logic_vector(Z_WIDTH-1 downto 0) := (others => '0')
   );
-end StreamSink_mod;
+end StreamSink_mdl;
 
-architecture Model of StreamSink_mod is
+architecture Model of StreamSink_mdl is
 begin
 
   -- "Register" this model in the StreamSink registry.
@@ -66,7 +66,7 @@ begin
   end process;
 
   -- This process controls the stream, but all monitoring tasks are deferred to
-  -- the StreamMonitor_mod instance.
+  -- the StreamMonitor_mdl instance.
   model_proc: process (clk) is
     variable ready_v          : std_logic := '0';
 
@@ -264,7 +264,7 @@ begin
 
   -- Instantiate a monitor for this stream, so the testbench can see exactly
   -- how the sink model and the unit under test are interacting.
-  monitor: StreamMonitor_mod
+  monitor: StreamMonitor_mdl
     generic map (
       NAME                      => NAME,
       ELEMENT_WIDTH             => ELEMENT_WIDTH,

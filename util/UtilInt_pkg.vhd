@@ -22,8 +22,12 @@ package UtilInt_pkg is
   -- Array of naturals.
   type nat_array is array (natural range <>) of natural;
 
-  -- Takes an array of naturals and returns the prefix sums.
+  -- Functions to compute the prefix sums of an array of naturals. psum returns
+  -- an array of the same size as the input containing the prefix sums as they
+  -- are usually defined; cumulative starts with the fixed value 0, and thus
+  -- has one element extra.
   function psum(x: nat_array) return nat_array;
+  function cumulative(x: nat_array) return nat_array;
 
   -- Returns the sum of an array of naturals.
   function sum(x: nat_array) return natural;
@@ -56,6 +60,16 @@ package body UtilInt_pkg is
     end loop;
     return y;
   end function;
+
+  function cumulative(x: nat_array) return nat_array is
+    variable y : nat_array(x'length downto 0);
+  begin
+    y(0) := 0;
+    for i in 0 to x'length-1 loop
+      y(i+1) := y(i) + x(i);
+    end loop;
+    return y;
+  end cumulative;
 
   function sum(x: nat_array) return natural is
     variable accumulator  : natural;

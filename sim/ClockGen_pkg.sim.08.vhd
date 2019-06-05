@@ -25,12 +25,12 @@ use work.TestCase_pkg.all;
 use work.SimDataComms_pkg.all;
 
 -- This package provides the component declaration and control functions for
--- ClockGen_mod.
+-- ClockGen_mdl.
 
 package ClockGen_pkg is
 
   -- Component declaration.
-  component ClockGen_mod is
+  component ClockGen_mdl is
     generic (
       NAME                      : string := "clock";
       AUTOSTART                 : boolean := true;

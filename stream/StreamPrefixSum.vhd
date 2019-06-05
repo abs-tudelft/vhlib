@@ -68,10 +68,10 @@ entity StreamPrefixSum is
     ---------------------------------------------------------------------------
     in_valid                    : in  std_logic;
     in_ready                    : out std_logic;
-    in_dvalid                   : in  std_logic;
+    in_dvalid                   : in  std_logic := '1';
     in_data                     : in  std_logic_vector(COUNT_MAX*ELEMENT_WIDTH-1 downto 0);
-    in_count                    : in  std_logic_vector(COUNT_WIDTH-1 downto 0);
-    in_last                     : in  std_logic;
+    in_count                    : in  std_logic_vector(COUNT_WIDTH-1 downto 0) := std_logic_vector(to_unsigned(COUNT_MAX, COUNT_WIDTH));
+    in_last                     : in  std_logic := '0';
     in_ctrl                     : in  std_logic_vector(CTRL_WIDTH-1 downto 0) := (others => '0');
 
     -- By default, the prefix sums are delimited by in_last. Additional

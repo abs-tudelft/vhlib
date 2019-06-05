@@ -53,13 +53,13 @@ architecture TestBench of StreamPrefixSum_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => ELEMENT_WIDTH,
@@ -106,7 +106,7 @@ begin
       out_last                  => b_last
     );
 
-  b_sink: StreamSink_mod
+  b_sink: StreamSink_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => ELEMENT_WIDTH,

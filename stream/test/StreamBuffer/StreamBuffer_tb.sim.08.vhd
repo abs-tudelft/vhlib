@@ -45,13 +45,13 @@ architecture TestBench of StreamBuffer_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => DATA_WIDTH
@@ -80,7 +80,7 @@ begin
       out_data                  => b_data
     );
 
-  b_sink: StreamSink_mod
+  b_sink: StreamSink_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => DATA_WIDTH

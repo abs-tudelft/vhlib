@@ -39,6 +39,3 @@ package UtilRam_pkg is
   end component;
 
 end UtilRam_pkg;
-
-package body UtilRam_pkg is
-end UtilRam_pkg;

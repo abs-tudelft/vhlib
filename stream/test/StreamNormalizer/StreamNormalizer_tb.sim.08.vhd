@@ -55,13 +55,13 @@ architecture TestBench of StreamNormalizer_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => 8,
@@ -79,7 +79,7 @@ begin
       last                      => a_last
     );
 
-  r_source: StreamSource_mod
+  r_source: StreamSource_mdl
     generic map (
       NAME                      => "r",
       ELEMENT_WIDTH             => COUNT_WIDTH
@@ -133,7 +133,7 @@ begin
       out_ready(0)              => b_ready
     );
 
-  b_sink: StreamSink_mod
+  b_sink: StreamSink_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => 8,

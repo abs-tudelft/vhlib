@@ -39,7 +39,7 @@ architecture TestBench of StreamPRNG_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
@@ -57,7 +57,7 @@ begin
       out_data                  => a_data
     );
 
-  a_sink: StreamSink_mod
+  a_sink: StreamSink_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => DATA_WIDTH

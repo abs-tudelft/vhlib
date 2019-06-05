@@ -58,13 +58,13 @@ architecture TestBench of StreamArb_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => 8
@@ -78,7 +78,7 @@ begin
       last                      => a_last
     );
 
-  b_source: StreamSource_mod
+  b_source: StreamSource_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => 8
@@ -92,7 +92,7 @@ begin
       last                      => b_last
     );
 
-  c_source: StreamSource_mod
+  c_source: StreamSource_mdl
     generic map (
       NAME                      => "c",
       ELEMENT_WIDTH             => 8
@@ -135,7 +135,7 @@ begin
       out_index                 => d_index
     );
 
-  d_sink: StreamSink_mod
+  d_sink: StreamSink_mdl
     generic map (
       NAME                      => "d",
       ELEMENT_WIDTH             => 8
@@ -151,7 +151,7 @@ begin
 
   d_index_ascii <= "001100" & d_index;
 
-  d_index_mon: StreamMonitor_mod
+  d_index_mon: StreamMonitor_mdl
     generic map (
       NAME                      => "i",
       ELEMENT_WIDTH             => 8

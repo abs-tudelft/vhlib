@@ -52,7 +52,7 @@ architecture TestCase of StreamSink_tc is
 
 begin
 
-  src : StreamSource_mod
+  src : StreamSource_mdl
     generic map (
       NAME            => NAME_SOURCE,
       ELEMENT_WIDTH   => ELEMENT_WIDTH,
@@ -78,7 +78,7 @@ begin
       z               => z
     );
 
-  uut : StreamSink_mod
+  uut : StreamSink_mdl
     generic map (
       NAME            => NAME_SINK,
       ELEMENT_WIDTH   => ELEMENT_WIDTH,
@@ -104,7 +104,7 @@ begin
       z               => z
     );
 
-  clk_inst: ClockGen_mod port map (clk => clk, reset => reset);
+  clk_inst: ClockGen_mdl port map (clk => clk, reset => reset);
 
   test_proc: process is
     variable s  : streamsource_type;

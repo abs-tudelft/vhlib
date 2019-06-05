@@ -33,6 +33,10 @@ package UtilMisc_pkg is
   -- Returns the number of '1''s in a
   function countOnes(a : in std_logic_vector) return natural;
 
+  -- Shifts an unsigned left if amount is positive or right if amount is
+  -- negative. When shifting right, round_up selects the rounding direction.
+  function shift(a: in unsigned; amount: in integer; round_up: boolean := false) return unsigned;
+
   -- Returns the first integer multiple of 2^b below or equal to a
   function alignDown(a : in unsigned; b : in natural) return unsigned;
 
@@ -119,6 +123,33 @@ package body UtilMisc_pkg is
       end if;
     end loop;
     return result;
+  end function;
+
+  function shift_right_round_up(a : in unsigned; amount : in natural) return unsigned is
+    variable arg_v : unsigned(a'length-1 downto 0);
+    variable lsb_v : unsigned(amount-1 downto 0);
+  begin
+    if amount /= 0 then -- prevent null ranges on lsb_v
+      arg_v := shift_right(a, amount);
+      lsb_v := a(amount-1 downto 0);
+      if (lsb_v /= 0) then
+        arg_v := arg_v + 1;
+      end if;
+    else
+      arg_v := a;
+    end if;
+    return arg_v;
+  end function;
+
+  function shift(a: in unsigned; amount: in integer; round_up: boolean := false) return unsigned is
+  begin
+    if amount >= 0 then
+      return shift_left(a, amount);
+    elsif round_up then
+      return shift_right_round_up(a, -amount);
+    else
+      return shift_right(a, -amount);
+    end if;
   end function;
 
   function alignDown(a : in unsigned; b : in natural) return unsigned is

@@ -25,12 +25,12 @@ use work.SimDataComms_pkg.all;
 use work.StreamMonitor_pkg.all;
 
 -- This package provides the component declaration and control functions for
--- StreamSink_mod.
+-- StreamSink_mdl.
 
 package StreamSink_pkg is
 
   -- Component declaration.
-  component StreamSink_mod is
+  component StreamSink_mdl is
     generic (
       NAME                        : string := "noname";
       ELEMENT_WIDTH               : natural := 8;

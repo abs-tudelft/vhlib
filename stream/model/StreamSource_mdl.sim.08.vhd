@@ -25,7 +25,7 @@ use work.StreamMonitor_pkg.all;
 -- This unit models a stream source, controlled through the procedures in
 -- StreamSource_pkg.
 
-entity StreamSource_mod is
+entity StreamSource_mdl is
   generic (
     NAME                        : string := "noname";
     ELEMENT_WIDTH               : natural := 8;
@@ -50,9 +50,9 @@ entity StreamSource_mod is
     y                           : out std_logic_vector(Y_WIDTH-1 downto 0);
     z                           : out std_logic_vector(Z_WIDTH-1 downto 0)
   );
-end StreamSource_mod;
+end StreamSource_mdl;
 
-architecture Model of StreamSource_mod is
+architecture Model of StreamSource_mdl is
 begin
 
   -- "Register" this model in the StreamSource registry.
@@ -65,7 +65,7 @@ begin
   end process;
 
   -- This process controls the stream, but all monitoring tasks are deferred to
-  -- the StreamMonitor_mod instance.
+  -- the StreamMonitor_mdl instance.
   model_proc: process (clk) is
     variable valid_v      : std_logic := '0';
     variable ready_cycles : integer := 0;
@@ -165,7 +165,7 @@ begin
 
   -- Instantiate a monitor for this stream, so the testbench can see exactly
   -- how the source model and the unit under test are interacting.
-  monitor: StreamMonitor_mod
+  monitor: StreamMonitor_mdl
     generic map (
       NAME                      => NAME,
       ELEMENT_WIDTH             => ELEMENT_WIDTH,

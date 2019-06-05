@@ -20,7 +20,7 @@ library work;
 use work.Stream_pkg.all;
 
 -- This unit serializes a stream, performing the inverse operation of
--- StreamParallelizer.
+-- StreamGearboxParallelizer.
 --
 --             .-----.
 -- Symbol: --->| a>b |--->

@@ -24,7 +24,7 @@ use work.StreamMonitor_pkg.all;
 -- This unit monitors a stream, in such a way that transfers can be monitored
 -- through the procedures in StreamMonitor_pkg.
 
-entity StreamMonitor_mod is
+entity StreamMonitor_mdl is
   generic (
     NAME                        : string := "noname";
     ELEMENT_WIDTH               : natural := 8;
@@ -49,9 +49,9 @@ entity StreamMonitor_mod is
     y                           : in  std_logic_vector(Y_WIDTH-1 downto 0) := (others => '0');
     z                           : in  std_logic_vector(Z_WIDTH-1 downto 0) := (others => '0')
   );
-end StreamMonitor_mod;
+end StreamMonitor_mdl;
 
-architecture Model of StreamMonitor_mod is
+architecture Model of StreamMonitor_mdl is
 begin
 
   -- "Register" this model in the StreamMonitor registry by populating the
@@ -71,7 +71,7 @@ begin
   end process;
 
   -- This process controls the stream, but all monitoring tasks are deferred to
-  -- the StreamMonitor_mod instance.
+  -- the StreamMonitor_mdl instance.
   model_proc: process (clk) is
     variable x_seen       : boolean := false;
     variable unstable     : boolean := false;

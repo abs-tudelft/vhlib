@@ -49,7 +49,7 @@ architecture TestBench of StreamFIFO_tb is
 
 begin
 
-  clkgen_in: ClockGen_mod
+  clkgen_in: ClockGen_mdl
     generic map (
       NAME                      => "in",
       INIT_PERIOD               => IN_CLK_PERIOD
@@ -59,7 +59,7 @@ begin
       reset                     => in_reset
     );
 
-  clkgen_out: ClockGen_mod
+  clkgen_out: ClockGen_mdl
     generic map (
       NAME                      => "out",
       INIT_PERIOD               => OUT_CLK_PERIOD
@@ -69,7 +69,7 @@ begin
       reset                     => out_reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => DATA_WIDTH
@@ -101,7 +101,7 @@ begin
       out_data                  => b_data
     );
 
-  b_sink: StreamSink_mod
+  b_sink: StreamSink_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => DATA_WIDTH

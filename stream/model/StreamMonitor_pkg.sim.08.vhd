@@ -24,12 +24,12 @@ use work.TestCase_pkg.all;
 use work.SimDataComms_pkg.all;
 
 -- This package provides the component declaration and control functions for
--- StreamMonitor_mod.
+-- StreamMonitor_mdl.
 
 package StreamMonitor_pkg is
 
   -- Component declaration.
-  component StreamMonitor_mod is
+  component StreamMonitor_mdl is
     generic (
       NAME                      : string := "noname";
       ELEMENT_WIDTH             : natural := 8;

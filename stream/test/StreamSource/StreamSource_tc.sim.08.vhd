@@ -50,7 +50,7 @@ architecture TestCase of StreamSource_tc is
 
 begin
 
-  uut : StreamSource_mod
+  uut : StreamSource_mdl
     generic map (
       NAME            => NAME,
       ELEMENT_WIDTH   => ELEMENT_WIDTH,
@@ -76,7 +76,7 @@ begin
       z               => z
     );
 
-  clk_inst: ClockGen_mod port map (clk => clk, reset => reset);
+  clk_inst: ClockGen_mdl port map (clk => clk, reset => reset);
 
   ready <= '1';
 

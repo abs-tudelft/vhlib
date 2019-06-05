@@ -26,12 +26,12 @@ use work.SimDataComms_pkg.all;
 use work.StreamMonitor_pkg.all;
 
 -- This package provides the component declaration and control functions for
--- StreamSource_mod.
+-- StreamSource_mdl.
 
 package StreamSource_pkg is
 
   -- Component declaration.
-  component StreamSource_mod is
+  component StreamSource_mdl is
     generic (
       NAME                        : string := "noname";
       ELEMENT_WIDTH               : natural := 8;

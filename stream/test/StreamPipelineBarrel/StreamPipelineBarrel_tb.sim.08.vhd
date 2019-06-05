@@ -47,13 +47,13 @@ architecture TestBench of StreamPipelineBarrel_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => 12
@@ -215,7 +215,7 @@ begin
       out_data                  => pipe_output(63 downto 56)
     );
 
-  b_sink: StreamSink_mod
+  b_sink: StreamSink_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => 64

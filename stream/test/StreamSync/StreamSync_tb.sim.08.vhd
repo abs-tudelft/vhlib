@@ -56,13 +56,13 @@ architecture TestBench of StreamSync_tb is
 
 begin
 
-  clkgen: ClockGen_mod
+  clkgen: ClockGen_mdl
     port map (
       clk                       => clk,
       reset                     => reset
     );
 
-  a_source: StreamSource_mod
+  a_source: StreamSource_mdl
     generic map (
       NAME                      => "a",
       ELEMENT_WIDTH             => 8,
@@ -85,7 +85,7 @@ begin
   a_use_other     <= a_y(0) or not a_valid;
   a_out_enable    <= a_z(0) or not a_valid;
 
-  b_source: StreamSource_mod
+  b_source: StreamSource_mdl
     generic map (
       NAME                      => "b",
       ELEMENT_WIDTH             => 8,
@@ -149,7 +149,7 @@ begin
     end if;
   end process;
 
-  c_sink: StreamSink_mod
+  c_sink: StreamSink_mdl
     generic map (
       NAME                      => "c",
       ELEMENT_WIDTH             => 8
@@ -162,7 +162,7 @@ begin
       data                      => c_data
     );
 
-  d_sink: StreamSink_mod
+  d_sink: StreamSink_mdl
     generic map (
       NAME                      => "d",
       ELEMENT_WIDTH             => 8

@@ -24,7 +24,7 @@ use work.ClockGen_pkg.all;
 
 -- This unit generates a clock and an associated synchronous reset.
 
-entity ClockGen_mod is
+entity ClockGen_mdl is
   generic (
     NAME                        : string := "clock";
 
@@ -56,9 +56,9 @@ entity ClockGen_mod is
     reset                       : out std_logic := '1';
     reset_n                     : out std_logic := '0'
   );
-end ClockGen_mod;
+end ClockGen_mdl;
 
-architecture Model of ClockGen_mod is
+architecture Model of ClockGen_mdl is
 
   signal sync   : std_logic := '0';
   signal clk_i  : std_logic := '0';
