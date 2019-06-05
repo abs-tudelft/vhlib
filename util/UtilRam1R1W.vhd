@@ -65,6 +65,16 @@ architecture Behavioral of UtilRam1R1W is
   -- Shared variable to represent the memory.
   type mem_type is array (2**DEPTH_LOG2-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
   signal mem : mem_type;
+  
+  -- RAM style pragmas:
+  
+  -- Vivado RAM style
+  attribute ram_style : string;
+  attribute ram_style of mem : signal is RAM_CONFIG;
+  
+  -- Quartus RAM style
+  
+  -- ... RAM style
 
 begin
 

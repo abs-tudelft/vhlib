@@ -421,6 +421,20 @@ package Stream_pkg is
     bits    : natural
   ) return std_logic_vector;
 
+  -- Returns the thermometer/unary-coded version of a count with implicit '1'
+  -- MSB.
+  function count_to_therm(
+    count   : std_logic_vector;
+    bits    : natural
+  ) return std_logic_vector;
+
+  -- Returns the count with implicit '1' MSB of a one-hot- or thermometer-coded
+  -- value.
+  function therm_to_count(
+    therm   : std_logic_vector;
+    bits    : natural
+  ) return std_logic_vector;
+
 end Stream_pkg;
 
 package body Stream_pkg is
@@ -460,6 +474,42 @@ package body Stream_pkg is
     end loop;
 
     return ret_array(to_integer(unsigned(count)) mod bits);
+  end function;
+
+  function count_to_therm(
+    count   : std_logic_vector;
+    bits    : natural
+  ) return std_logic_vector is
+    type ret_array_type is array(0 to bits-1) of std_logic_vector(bits-1 downto 0);
+    variable ret_array : ret_array_type;
+  begin
+    for i in 0 to bits-1 loop
+      for j in 0 to i loop
+        ret_array(i)(j) := '1';
+      end loop;
+      for j in i to bits-1 loop
+        ret_array(i)(j) := '0';
+      end loop;
+    end loop;
+
+    -- all zeros is max count
+    ret_array(0) := (others => '1');
+
+    return ret_array(to_integer(unsigned(count)) mod bits);
+  end function;
+
+  function therm_to_count(
+    therm   : std_logic_vector;
+    bits    : natural
+  ) return std_logic_vector is
+    variable cnt : std_logic_vector(bits-1 downto 0) := (others => '0');
+  begin
+    for i in 0 to therm'length-1 loop
+      if therm(i) = '1' then
+        cnt := cnt or std_logic_vector(to_unsigned(i, bits));
+      end if;
+    end loop;
+    return cnt;
   end function;
 
 end Stream_pkg;

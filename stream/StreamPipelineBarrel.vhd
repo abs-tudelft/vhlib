@@ -20,6 +20,7 @@ use ieee.numeric_std.all;
 library work;
 use work.Stream_pkg.all;
 use work.UtilInt_pkg.all;
+use work.UtilMisc_pkg.all;
 
 -- This unit is a barrel shifter, to be used within a pipeline controlled by
 -- StreamPipelineControl.
