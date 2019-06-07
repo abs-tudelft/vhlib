@@ -545,7 +545,7 @@ package body UtilStr_pkg is
   begin
     normalized := value;
     for i in 0 to digits-1 loop
-      temp := to_X01Z(extractStdLogicVectRange(normalized, i*4+3, i*4, '0'));
+      temp := to_X01Z(extractStdLogicVectRange(normalized, i*4, 4, '0'));
       case temp is
         when "0000" => s(digits-i) := '0';
         when "0001" => s(digits-i) := '1';
@@ -564,7 +564,7 @@ package body UtilStr_pkg is
         when "1110" => s(digits-i) := 'E';
         when "1111" => s(digits-i) := 'F';
         when others =>
-          temp := extractStdLogicVectRange(normalized, i*4+3, i*4, '0');
+          temp := extractStdLogicVectRange(normalized, i*4, 4, '0');
           case temp is
             when "XXXX" => s(digits-i) := 'X';
             when "UUUU" => s(digits-i) := 'U';
@@ -661,7 +661,7 @@ package body UtilStr_pkg is
   begin
     normalized := value;
     for i in 0 to digits-1 loop
-      temp := extractStdLogicVectRange(normalized, i, i, '0');
+      temp := extractStdLogicVectRange(normalized, i, 1, '0');
       case temp is
         when "0" => s(digits-i) := '0';
         when "1" => s(digits-i) := '1';
