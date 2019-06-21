@@ -6,14 +6,7 @@ resources:
     name: abs-tudelft/azure-pipelines-templates
 
 jobs:
-- job: Test
-  pool:
-    vmImage: ubuntu-latest
-  steps:
-  - template: steps/install-python.yml@abs-tudelft
-    parameters:
-      packages: ['vhdeps']
-  - template: steps/install-ghdl.yml@abs-tudelft
-  - template: steps/vhdeps.yml@abs-tudelft
-    parameters:
-      sources: ['sim', 'stream', 'util']
+
+- template: jobs/vhdeps.yml@abs-tudelft
+  parameters:
+    sources: ['sim', 'stream', 'util']
