@@ -2,6 +2,7 @@ vhlib: a vendor-agnostic VHDL IP library
 ========================================
 
 [![Build Status](https://dev.azure.com/abs-tudelft/vhlib/_apis/build/status/abs-tudelft.vhlib?branchName=master)](https://dev.azure.com/abs-tudelft/vhlib/_build/latest?definitionId=2&branchName=master)
+[![codecov](https://codecov.io/gh/abs-tudelft/vhlib/branch/master/graph/badge.svg)](https://codecov.io/gh/abs-tudelft/vhlib)
 
 `vhlib` is a library of generic, pure-VHDL components that implement common
 functionality such as streams in an open source, vendor-agnostic way. It
