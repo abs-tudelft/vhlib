@@ -215,26 +215,27 @@ begin
     variable fifo_reserved_v    : unsigned(FIFO_DEPTH_LOG2 downto 0);
   begin
     if rising_edge(clk) then
-      fifo_reserved_v := fifo_reserved;
-      if pipe_valid_s(0) = '1' then
-        assert fifo_reserved_v(fifo_reserved_v'HIGH) = '0'
-          report "FIFO overflow possible!" severity failure;
-        fifo_reserved_v := fifo_reserved_v + 1;
-      end if;
-      if out_valid_s = '1' and out_ready = '1' then
-        assert fifo_reserved_v > 0
-          report "FIFO underflow possible!" severity failure;
-        fifo_reserved_v := fifo_reserved_v - 1;
-      end if;
-      if pipe_valid_s(pipe_valid_s'HIGH) = '1' and pipe_delete = '1' then
-        assert fifo_reserved_v > 0
-          report "FIFO underflow possible!" severity failure;
-        fifo_reserved_v := fifo_reserved_v - 1;
-      end if;
       if reset = '1' then
-        fifo_reserved_v := (others => '0');
+        fifo_reserved <= (others => '0');
+      else
+        fifo_reserved_v := fifo_reserved;
+        if pipe_valid_s(0) = '1' then
+            assert fifo_reserved_v(fifo_reserved_v'HIGH) = '0'
+            report "FIFO overflow possible!" severity failure;
+            fifo_reserved_v := fifo_reserved_v + 1;
+        end if;
+        if out_valid_s = '1' and out_ready = '1' then
+            assert fifo_reserved_v > 0
+            report "FIFO underflow possible!" severity failure;
+            fifo_reserved_v := fifo_reserved_v - 1;
+        end if;
+        if pipe_valid_s(pipe_valid_s'HIGH) = '1' and pipe_delete = '1' then
+            assert fifo_reserved_v > 0
+            report "FIFO underflow possible!" severity failure;
+            fifo_reserved_v := fifo_reserved_v - 1;
+        end if;
+        fifo_reserved <= fifo_reserved_v;
       end if;
-      fifo_reserved <= fifo_reserved_v;
     end if;
   end process;
 
