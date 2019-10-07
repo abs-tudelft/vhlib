@@ -938,6 +938,8 @@ package body UtilMem64_pkg is
     variable lNr  : positive;
     variable addr : unsigned(63 downto 0);
     variable index: natural;
+    variable wide : std_logic_vector(255 downto 0);
+    constant ones : std_logic_vector(31 downto 0) := (others => '1');
   begin
     file_open(f, fname, read_mode);
     lNr := 1;
@@ -956,18 +958,36 @@ package body UtilMem64_pkg is
       end if;
 
       -- Write the bytes to the memory.
-      index := 0;
       addr := unsigned(sr.addr) + unsigned(offset);
-      while index < sr.dataCount loop
+      if sr.dataCount <= 32 and to_integer(addr(11 downto 0)) + sr.dataCount <= 4096 then
+
+        -- Write all bytes at once. This saves a bunch of pointer chasing in
+        -- the mem_write() procedure.
+        for i in 0 to sr.dataCount - 1 loop
+          wide(i*8+7 downto i*8) := sr.data(i);
+        end loop;
 
         -- Perform the write.
-        mem_write(mem, std_logic_vector(addr), sr.data(index), "1");
+        mem_write(mem, std_logic_vector(addr),
+                  wide(sr.dataCount*8-1 downto 0),
+                  ones(sr.dataCount-1 downto 0));
 
-        -- Increment address and index.
-        index := index + 1;
-        addr := addr + 1;
+      else
 
-      end loop;
+        -- Do it the slow way, byte by byte.
+        index := 0;
+        while index < sr.dataCount loop
+
+          -- Perform the write.
+          mem_write(mem, std_logic_vector(addr), sr.data(index), "1");
+
+          -- Increment address and index.
+          index := index + 1;
+          addr := addr + 1;
+
+        end loop;
+
+      end if;
 
     end loop;
     file_close(f);
